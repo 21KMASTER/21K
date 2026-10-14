@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>21K List - Live Setlist & Chord Prompter Pro (Cloud Sync v1.3)</title>
+    <title>21K List - Live Setlist & Chord Prompter Pro (Cloud Sync Ultimate)</title>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
     <style>
@@ -137,9 +137,24 @@
             background: rgba(251, 191, 36, 0.92); color: #000; padding: 3px 8px; border-radius: 6px; font-weight: 800; font-size: 11px;
         }
         
+        .star-btn {
+            position: absolute; bottom: 10px; right: 10px; z-index: 3;
+            background: rgba(15, 22, 18, 0.95); border: 2px solid #374151;
+            color: #6b7280; font-size: 18px; width: 36px; height: 36px; border-radius: 50%;
+            display: flex; align-items: center; justify-content: center; cursor: pointer; transition: 0.2s;
+            box-shadow: 0 4px 10px rgba(0,0,0,0.5);
+        }
+        .star-btn:hover { border-color: var(--star-color); transform: scale(1.1); }
+        .star-btn.starred {
+            color: #000; border-color: #f59e0b; background: linear-gradient(135deg, #fbbf24, #d97706);
+            text-shadow: none; box-shadow: 0 0 15px rgba(251, 191, 36, 0.8); font-weight: bold;
+        }
+
         .video-groove-subtitle { font-size: 11px; color: var(--accent-gold); margin-top: 4px; background: rgba(0,0,0,0.65); padding: 2px 8px; border-radius: 10px; z-index: 2; }
         .video-info { padding: 14px; font-size: 12px; color: var(--text-secondary); }
         .badge-groove { display: inline-block; padding: 3px 10px; border-radius: 20px; font-weight: 700; font-size: 11px; color: #fff; margin-bottom: 6px; }
+        .tags-row { display: flex; flex-wrap: wrap; gap: 4px; margin-top: 6px; }
+        .tag { background: var(--bg-color); padding: 2px 7px; border-radius: 6px; font-size: 11px; border: 1px solid var(--border-color); color: #d1d5db; }
         
         .audio-links-box {
             margin-top: 10px; padding-top: 8px; border-top: 1px dashed var(--border-color);
@@ -156,6 +171,7 @@
         }
         .btn-card-action { background: none; border: none; cursor: pointer; font-size: 12px; padding: 4px 8px; border-radius: 8px; font-weight: 600; transition: 0.2s; }
         .btn-broadcast { color: var(--primary-emerald); }
+        .btn-edit { color: #60a5fa; }
         .btn-delete { color: #f87171; }
 
         .form-box {
@@ -195,6 +211,11 @@
             color: #000 !important; font-weight: 800; border-color: #fbbf24;
             box-shadow: 0 4px 12px rgba(251, 191, 36, 0.35);
         }
+        .checkbox-group.gen-group label.checked {
+            background: linear-gradient(135deg, #3b82f6, #1d4ed8) !important;
+            color: #fff !important; border-color: #3b82f6;
+            box-shadow: 0 4px 12px rgba(59, 130, 246, 0.35);
+        }
 
         .submit-btn {
             width: 100%; background: linear-gradient(135deg, var(--primary-emerald), #047857);
@@ -205,6 +226,17 @@
         .submit-btn:hover { background: linear-gradient(135deg, #059669, #065f46); transform: translateY(-2px); }
 
         .show-flow-container { background: var(--surface-color); padding: 30px; border-radius: 20px; border: 1px solid var(--border-color); box-shadow: 0 10px 30px rgba(0,0,0,0.4); }
+        .chart-box { background: var(--bg-color); padding: 22px; border-radius: 14px; margin-bottom: 25px; border: 1px solid var(--border-color); }
+        .script-table { width: 100%; border-collapse: collapse; margin-top: 15px; font-size: 11px; }
+        .script-table th, .script-table td { border: 1px solid var(--border-color); padding: 9px; text-align: left; }
+        .script-table th { background: #0a0f0d; color: var(--primary-emerald); font-weight: 700; }
+
+        .backup-box {
+            background: var(--bg-color); padding: 20px; border-radius: 14px;
+            border: 1px solid var(--border-color); margin-top: 25px; text-align: center;
+        }
+        .btn-backup { background: #d97706; color: white; border: none; padding: 11px 22px; border-radius: 10px; cursor: pointer; font-weight: 700; margin: 5px; }
+        .btn-restore { background: #2563eb; color: white; border: none; padding: 11px 22px; border-radius: 10px; cursor: pointer; font-weight: 700; margin: 5px; }
 
         /* Live Prompter Overlay */
         .live-overlay { display: none; position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; background: rgba(4, 8, 6, 0.99); z-index: 9999; flex-direction: column; justify-content: space-between; padding: 25px; box-sizing: border-box; }
@@ -252,15 +284,18 @@
             <div class="app-logo-icon"><span>🎵</span></div>
             <div class="app-title-group">
                 <h1>21K <span>List</span></h1>
-                <div class="app-subtitle">Live Setlist & Chord Prompter Pro (Cloud Sync v1.3)</div>
+                <div class="app-subtitle">Live Setlist & Chord Prompter Pro (Cloud Sync Ultimate v1.4)</div>
             </div>
         </div>
 
         <div class="nav-buttons" id="mainNavButtons">
             <button class="btn active" id="tabHomeBtn" onclick="switchTab('home')">🏠 คลังเพลง</button>
             <button class="btn" id="tabPlaylistBtn" onclick="switchTab('playlist')">📝 จัด Playlist (ไม่จำกัด)</button>
+            <button class="btn" id="tabSavedPlaylistsBtn" onclick="switchTab('savedPlaylists')">⭐ Playlist โปรด</button>
+            <button class="btn" id="tabFlowBtn" onclick="switchTab('flow')">📊 สคริปต์กราฟโชว์</button>
+            <button class="btn" id="tabAnalyticsBtn" onclick="switchTab('analytics')">📈 วิเคราะห์ Groove Flow</button>
             <button class="btn" id="tabFormBtn" onclick="switchTab('form')">➕ เพิ่มเพลงใหม่</button>
-            <button class="btn" id="tabGrooveBtn" onclick="switchTab('groove')">⚙️ ตั้งค่า & คุมคน</button>
+            <button class="btn" id="tabGrooveBtn" onclick="switchTab('groove')">⚙️ ตั้งค่า / Cloud Sync</button>
             <button class="btn" id="tabLiveDisplayBtn" style="border-color:var(--primary-emerald); color:var(--primary-emerald); font-weight:800;" onclick="openLivePropter(0)">📺 Live โชว์สด</button>
         </div>
     </div>
@@ -272,12 +307,37 @@
                 <input type="text" id="searchInput" placeholder="ค้นหาชื่อเพลง, Key, คอร์ดแรก, Groove..." oninput="filterSongs()">
             </div>
             <div class="filters-grid">
+                <select id="filterStar" class="filter-select" onchange="filterSongs()">
+                    <option value="">⭐ ดาวทั้งหมด</option>
+                    <option value="starred">เฉพาะเพลงติดดาวโปรด ⭐</option>
+                </select>
+                <select id="filterLiveMode" class="filter-select" onchange="filterSongs()">
+                    <option value="">ทุกโหมด (Live/Data)</option>
+                    <option value="Live">เฉพาะ [ Live ] เล่นสด</option>
+                    <option value="Data">เฉพาะ [ Data ] แบ็คกิ้งแทร็ก</option>
+                </select>
                 <select id="filterGroove" class="filter-select" onchange="filterSongs()"><option value="">ทุก Groove</option></select>
                 <select id="filterCrowd" class="filter-select" onchange="filterSongs()"><option value="">ทุกคุมคน</option></select>
                 <select id="filterKey" class="filter-select" onchange="filterSongs()">
                     <option value="">ทุก Key</option>
                     <option value="C">C</option><option value="C#">C#</option><option value="Db">Db</option><option value="D">D</option><option value="D#">D#</option><option value="Eb">Eb</option><option value="E">E</option><option value="F">F</option><option value="F#">F#</option><option value="Gb">Gb</option><option value="G">G</option><option value="G#">G#</option><option value="Ab">Ab</option><option value="A">A</option><option value="A#">A#</option><option value="Bb">Bb</option><option value="B">B</option><option value="Cm">Cm</option><option value="Dm">Dm</option><option value="Em">Em</option><option value="Fm">Fm</option><option value="F#m">F#m</option><option value="Gm">Gm</option><option value="Am">Am</option><option value="Bm">Bm</option>
                 </select>
+                <select id="filterSpeed" class="filter-select" onchange="filterSongs()">
+                    <option value="">ทุกความเร็ว</option>
+                    <option value="ช้ามาก">🐢 ช้ามาก</option><option value="ช้า">🚶 ช้า</option><option value="กลาง">🏃 กลาง</option><option value="เร็ว">⚡ เร็ว</option><option value="เร็วมาก">🔥 เร็วมาก</option>
+                </select>
+                <select id="filterEmotion" class="filter-select" onchange="filterSongs()">
+                    <option value="">ทุก Emotion</option>
+                    <option value="มีความสุข / คึกคัก">✨ มีความสุข / คึกคัก</option><option value="เศร้า / ดิ่ง">🌧️ เศร้า / ดิ่ง</option><option value="ปล่อยวาง / สงบ">🍃 ปล่อยวาง / สงบ</option><option value="โกรธ / ดุดัน">🔥 โกรธ / ดุดัน</option><option value="เหงา / อ้างว้าง">🌙 เหงา / อ้างว้าง</option><option value="ฮึกเหิม / มีพลัง">⚡ ฮึกเหิม / มีพลัง</option><option value="สุขุม / นุ่มลึก">🍷 สุขุม / นุ่มลึก</option><option value="โรแมนติก / อบอุ่น">💖 โรแมนติก / อบอุ่น</option>
+                </select>
+                <select id="filterSex" class="filter-select" onchange="filterSongs()"><option value="">ทุก Sex</option><option value="ชาย">ชาย</option><option value="หญิง">หญิง</option><option value="ทั้งหมด">ทั้งหมด</option></select>
+                <select id="filterGen" class="filter-select" onchange="filterSongs()">
+                    <option value="">ทุก Gen</option>
+                    <option value="Gen X">Gen X</option><option value="Gen Y">Gen Y</option><option value="Gen Z">Gen Z</option><option value="All">All</option>
+                </select>
+                <select id="filterTaste" class="filter-select" onchange="filterSongs()"><option value="">ทุก Taste</option><option value="อินเตอร์">อินเตอร์</option><option value="ในเมือง">ในเมือง</option><option value="บ้าน">บ้าน</option><option value="บ้านมาก">บ้านมาก</option><option value="ทั้งหมด">ทั้งหมด</option></select>
+                <select id="filterNews" class="filter-select" onchange="filterSongs()"><option value="">ทุก News</option><option value="ซ้ำซาก">ซ้ำซาก</option><option value="ซ้ำ">ซ้ำ</option><option value="พอใช้">พอใช้</option><option value="ใหม่">ใหม่</option><option value="ใหม่มาก">ใหม่มาก</option></select>
+                <select id="filterHappy" class="filter-select" onchange="filterSongs()"><option value="">ทุก Happy</option><option value="น้อยมาก">น้อยมาก</option><option value="น้อย">น้อย</option><option value="พอใช้">พอใช้</option><option value="มาก">มาก</option><option value="มากที่สุด">มากที่สุด</option></select>
             </div>
         </div>
         <div class="video-grid" id="videoGrid"></div>
@@ -287,6 +347,26 @@
     <div id="playlistSection" class="section-view">
         <div class="show-flow-container">
             <h3 style="margin-top:0; text-align:center; color:var(--primary-emerald);">📝 ระบบจัดเซ็ตลิสต์แสดงสด (ไม่จำกัดจำนวนเพลง)</h3>
+            
+            <div class="random-tools-box">
+                <div style="font-weight:bold; color:var(--accent-gold); font-size:14px;">🎲 ระบบสุ่มจัด Playlist อัตโนมัติ</div>
+                <div style="display:flex; gap:10px; flex-wrap:wrap;">
+                    <button type="button" class="btn-random" onclick="generateRandomNoGrooveRepeat()">⚡ สุ่มเพลงทั้งหมด (ห้าม Groove ซ้ำติดกัน 3 เพลง)</button>
+                    <button type="button" class="btn-random" style="background:linear-gradient(135deg, #2563eb, #1d4ed8);" onclick="generateRandomFromHistoryPattern()">🔄 สุ่มตาม Pattern โชว์เก่า</button>
+                    <button type="button" class="btn-random" style="background:#ef4444;" onclick="clearCurrentPlaylist()">🗑️ ล้างเซ็ตลิสต์</button>
+                </div>
+            </div>
+
+            <div style="display: flex; gap: 15px; max-width: 650px; margin: 0 auto 20px auto; flex-wrap: wrap;">
+                <div class="form-group" style="flex: 1; margin-bottom: 0;">
+                    <label for="showTitleInput">ชื่อโชว์ / ชื่อเซ็ตลิสต์:</label>
+                    <input type="text" id="showTitleInput" placeholder="เช่น งานแต่งงาน / คอนเสิร์ต 3 ชั่วโมงยาวๆ">
+                </div>
+                <div style="display: flex; align-items: flex-end; gap: 8px;">
+                    <button type="button" class="btn" style="background:var(--accent-gold); color:#000; font-weight:bold; height:43px;" onclick="saveFavoritePlaylist()">⭐ บันทึกเป็น Playlist โปรด</button>
+                </div>
+            </div>
+
             <div class="playlist-layout">
                 <div class="builder-card">
                     <h4 style="margin-top:0; color:var(--accent-gold); display:flex; justify-content:space-between;">
@@ -296,7 +376,9 @@
                     <div id="currentPlaylistContainer">
                         <p style="color:var(--text-secondary); text-align:center; padding:20px;">ยังไม่มีเพลงในเซ็ตลิสต์</p>
                     </div>
+                    <button type="button" class="submit-btn" style="background:#2563eb; margin-top:15px;" onclick="saveCurrentShow()">💾 บันทึกโชว์นี้และอัปเดตสถิติเพลง</button>
                 </div>
+
                 <div class="builder-card">
                     <h4 style="margin-top:0; color:var(--primary-emerald);">📚 คลิกเลือกเพลงจากคลังเพิ่มเข้า Playlist</h4>
                     <input type="text" id="playlistSearch" placeholder="ค้นหาเพลง..." oninput="renderPlaylistLibrary()" style="margin-bottom:12px;">
@@ -306,7 +388,43 @@
         </div>
     </div>
 
-    <!-- 3. หน้าเพิ่ม/แก้ไขเพลง -->
+    <!-- 3. หน้า Playlist โปรด -->
+    <div id="savedPlaylistsSection" class="section-view">
+        <div class="show-flow-container">
+            <h3 style="margin-top:0; text-align:center; color:var(--star-color);">⭐ Playlist โปรดที่บันทึกไว้</h3>
+            <p style="text-align:center; color:var(--text-secondary); font-size:13px;">รวมเซ็ตลิสต์ที่คุณชื่นชอบ สามารถโหลดขึ้นมาเล่นสดได้ทันที</p>
+            <div id="savedPlaylistsContainer" style="margin-top:20px;"></div>
+        </div>
+    </div>
+
+    <!-- 4. หน้าสคริปต์และกราฟ -->
+    <div id="flowSection" class="section-view">
+        <div class="show-flow-container">
+            <h3 style="margin-top:0; text-align:center; color:var(--primary-emerald);">📊 กราฟวิเคราะห์พลังงานโชว์ (Active Setlist Flow)</h3>
+            <div class="chart-box"><canvas id="energyChart" height="110"></canvas></div>
+            <h3 style="margin-bottom: 5px; color:var(--accent-gold);">📜 สคริปต์โชว์ปัจจุบัน</h3>
+            <div style="overflow-x: auto;">
+                <table class="script-table">
+                    <thead>
+                        <tr>
+                            <th>#</th><th>ชื่อเพลง</th><th>Live/Data</th><th>Key</th><th>คอร์ดแรก</th><th>Groove</th><th>ความเร็ว</th><th>คุมคน</th><th>Sex</th><th>Gen</th><th>Taste</th><th>News</th><th>Happy</th><th>Power</th><th>Tone</th>
+                        </tr>
+                    </thead>
+                    <tbody id="scriptTableBody"></tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <!-- 5. หน้าวิเคราะห์ Groove Flow -->
+    <div id="analyticsSection" class="section-view">
+        <div class="show-flow-container">
+            <h3 style="margin-top:0; text-align:center; color:var(--primary-emerald);">📈 วิเคราะห์รูปแบบการต่อ Groove (Groove Flow Analytics)</h3>
+            <div id="analyticsHistoryContainer"></div>
+        </div>
+    </div>
+
+    <!-- 6. หน้าเพิ่ม/แก้ไขเพลง -->
     <div id="formSection" class="section-view">
         <div class="form-box">
             <h3 style="margin-top:0; text-align:center; color:var(--primary-emerald);" id="formTitle">เพิ่มข้อมูลเพลงใหม่</h3>
@@ -315,6 +433,13 @@
                 <div class="form-group">
                     <label for="title">ชื่อเพลง (จำเป็นต้องมี):</label>
                     <input type="text" id="title" required placeholder="ระบุชื่อเพลง...">
+                </div>
+                <div class="form-group">
+                    <label>ประเภทการแสดง (Live / Data):</label>
+                    <div class="radio-group" data-name="liveMode">
+                        <label><input type="radio" name="liveMode" value="Live">🎸 [ Live ] เล่นสด</label>
+                        <label><input type="radio" name="liveMode" value="Data">💻 [ Data ] แบ็คกิ้งแทร็ก</label>
+                    </div>
                 </div>
                 <div style="display: flex; gap: 10px;">
                     <div class="form-group" style="flex: 1;">
@@ -330,12 +455,35 @@
                     </div>
                 </div>
                 <div class="form-group">
-                    <label for="songGroove">Groove:</label>
+                    <label for="songGroove">1. Groove:</label>
                     <select id="songGroove" class="form-control"><option value="">-- เลือก Groove --</option></select>
                 </div>
                 <div class="form-group">
-                    <label>การควบคุมคนดู (เลือกได้มากกว่า 1):</label>
+                    <label>2. ความเร็ว (Speed):</label>
+                    <div class="radio-group" data-name="speed">
+                        <label><input type="radio" name="speed" value="ช้ามาก">🐢 ช้ามาก</label>
+                        <label><input type="radio" name="speed" value="ช้า">🚶 ช้า</label>
+                        <label><input type="radio" name="speed" value="กลาง">🏃 กลาง</label>
+                        <label><input type="radio" name="speed" value="เร็ว">⚡ เร็ว</label>
+                        <label><input type="radio" name="speed" value="เร็วมาก">🔥 เร็วมาก</label>
+                    </div>
+                </div>
+                
+                <div class="form-group">
+                    <label>3. การควบคุมคนดู (เลือกได้มากกว่า 1 ตัวเลือก):</label>
                     <div class="checkbox-group" id="crowdCheckboxGroup"></div>
+                </div>
+
+                <div class="form-group">
+                    <label for="songEmotion">Emotion:</label>
+                    <select id="songEmotion" class="form-control">
+                        <option value="">-- เลือกอารมณ์ --</option>
+                        <option value="มีความสุข / คึกคัก">✨ มีความสุข / คึกคัก</option><option value="เศร้า / ดิ่ง">🌧️ เศร้า / ดิ่ง</option><option value="ปล่อยวาง / สงบ">🍃 ปล่อยวาง / สงบ</option><option value="โกรธ / ดุดัน">🔥 โกรธ / ดุดัน</option><option value="เหงา / อ้างว้าง">🌙 เหงา / อ้างว้าง</option><option value="ฮึกเหิม / มีพลัง">⚡ ฮึกเหิม / มีพลัง</option><option value="สุขุม / นุ่มลึก">🍷 สุขุม / นุ่มลึก</option><option value="โรแมนติก / อบอุ่น">💖 โรแมนติก / อบอุ่น</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label for="songPower">Power (1 - 100):</label>
+                    <input type="number" id="songPower" min="1" max="100" placeholder="เช่น 80">
                 </div>
                 <div class="form-group">
                     <label for="audioLink1">ลิงก์ MP3 Google Drive (1):</label>
@@ -350,24 +498,89 @@
                     <input type="url" id="songImage" placeholder="วางลิงก์รูปภาพ เช่น https://i.imgur.com/xxxx.jpg" oninput="previewImageUrl()">
                     <img id="imgPreview" class="img-preview" alt="Preview">
                 </div>
+                <div class="form-group">
+                    <label>4. Size:</label>
+                    <div class="radio-group" data-name="size">
+                        <label><input type="radio" name="size" value="เล็กมาก">เล็กมาก</label>
+                        <label><input type="radio" name="size" value="เล็ก">เล็ก</label>
+                        <label><input type="radio" name="size" value="กลาง">กลาง</label>
+                        <label><input type="radio" name="size" value="ใหญ่">ใหญ่</label>
+                        <label><input type="radio" name="size" value="ใหญ่มาก">ใหญ่มาก</label>
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label>5. Tone:</label>
+                    <div class="radio-group" data-name="tone">
+                        <label><input type="radio" name="tone" value="มืดมาก">มืดมาก</label>
+                        <label><input type="radio" name="tone" value="มืด">มืด</label>
+                        <label><input type="radio" name="tone" value="ปกติ">ปกติ</label>
+                        <label><input type="radio" name="tone" value="สว่าง">สว่าง</label>
+                        <label><input type="radio" name="tone" value="สว่างมาก">สว่างมาก</label>
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label>6. Sex:</label>
+                    <div class="radio-group" data-name="sex">
+                        <label><input type="radio" name="sex" value="ชาย">ชาย</label>
+                        <label><input type="radio" name="sex" value="หญิง">หญิง</label>
+                        <label><input type="radio" name="sex" value="ทั้งหมด">ทั้งหมด</label>
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label>7. Gen (เลือกได้มากกว่า 1 ตัวเลือก):</label>
+                    <div class="checkbox-group gen-group" id="genCheckboxGroup">
+                        <label><input type="checkbox" name="gen" value="Gen X">Gen X</label>
+                        <label><input type="checkbox" name="gen" value="Gen Y">Gen Y</label>
+                        <label><input type="checkbox" name="gen" value="Gen Z">Gen Z</label>
+                        <label><input type="checkbox" name="gen" value="All">All</label>
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label>8. Taste:</label>
+                    <div class="radio-group" data-name="taste">
+                        <label><input type="radio" name="taste" value="อินเตอร์">อินเตอร์</label>
+                        <label><input type="radio" name="taste" value="ในเมือง">ในเมือง</label>
+                        <label><input type="radio" name="taste" value="บ้าน">บ้าน</label>
+                        <label><input type="radio" name="taste" value="บ้านมาก">บ้านมาก</label>
+                        <label><input type="radio" name="taste" value="ทั้งหมด">ทั้งหมด</label>
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label>9. News:</label>
+                    <div class="radio-group" data-name="news">
+                        <label><input type="radio" name="news" value="ซ้ำซาก">ซ้ำซาก</label>
+                        <label><input type="radio" name="news" value="ซ้ำ">ซ้ำ</label>
+                        <label><input type="radio" name="news" value="พอใช้">พอใช้</label>
+                        <label><input type="radio" name="news" value="ใหม่">ใหม่</label>
+                        <label><input type="radio" name="news" value="ใหม่มาก">ใหม่มาก</label>
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label>10. Happy:</label>
+                    <div class="radio-group" data-name="happy">
+                        <label><input type="radio" name="happy" value="น้อยมาก">น้อยมาก</label>
+                        <label><input type="radio" name="happy" value="น้อย">น้อย</label>
+                        <label><input type="radio" name="happy" value="พอใช้">พอใช้</label>
+                        <label><input type="radio" name="happy" value="มาก">มาก</label>
+                        <label><input type="radio" name="happy" value="มากที่สุด">มากที่สุด</label>
+                    </div>
+                </div>
                 <button type="submit" class="submit-btn" id="saveBtn">บันทึกเพลงลงระบบ Cloud</button>
             </form>
         </div>
     </div>
 
-    <!-- 4. หน้าตั้งค่า Groove, คุมคน และ Cloud -->
+    <!-- 7. หน้าจัดการตั้งค่า & Cloud Sync -->
     <div id="grooveSection" class="section-view">
         <div class="form-box">
-            <h3 style="margin-top:0; text-align:center; color:var(--primary-emerald);">⚙️ ตั้งค่าระบบ Groove, คุมคน & Cloud</h3>
+            <h3 style="margin-top:0; text-align:center; color:var(--primary-emerald);">⚙️ ตั้งค่าคลาวด์กลาง (JSONBin.io Sync) & จัดการระบบ</h3>
             
-            <div style="background:var(--bg-color); padding:15px; border-radius:12px; margin-bottom:20px; border:1px solid var(--border-color);">
-                <h4 style="color:var(--primary-emerald); margin-top:0;">เชื่อมต่อ JSONBin.io Cloud</h4>
+            <div style="background:var(--bg-color); padding:18px; border-radius:14px; border:1px solid var(--border-color); margin-bottom:20px;">
+                <h4 style="color:var(--primary-emerald); margin-top:0;">เชื่อมต่อ Cloud ซิงค์ข้อมูลกับเพื่อน</h4>
                 <div class="form-group"><input type="password" id="jsonbinKeyInput" placeholder="JSONBin Master Key..."></div>
-                <div class="form-group"><input type="text" id="jsonbinIdInput" placeholder="JSONBin Bin ID (ปล่อยว่างหากสร้างใหม่)..."></div>
+                <div class="form-group"><input type="text" id="jsonbinIdInput" placeholder="JSONBin Bin ID (เว้นว่างถ้าสร้างใหม่)..."></div>
                 <button type="button" class="btn" style="background:#2563eb; color:#fff; width:100%; font-weight:bold;" onclick="saveCloudConfig()">💾 บันทึกการเชื่อมต่อคลาวด์</button>
             </div>
-
-            <hr style="border-color:var(--border-color); margin: 20px 0;">
 
             <form onsubmit="handleAddGroove(event)">
                 <h4 style="color:var(--accent-gold); margin-bottom:10px;">เพิ่ม Groove</h4>
@@ -377,19 +590,26 @@
             </form>
             <div class="chip-list" id="grooveChipList" style="margin-top:10px;"></div>
 
-            <hr style="border-color:var(--border-color); margin: 20px 0;">
+            <hr style="border-color:var(--border-color); margin: 25px 0;">
 
             <form onsubmit="handleAddCrowd(event)">
                 <h4 style="color:var(--accent-gold); margin-bottom:10px;">เพิ่มคำสั่งคุมคน</h4>
                 <div class="form-group"><input type="text" id="newCrowdName" required placeholder="ชื่อคำสั่งคุมคน..."></div>
-                <button type="submit" class="submit-btn" style="background:#d97706;">+ เพิ่มคำสั่ง</button>
+                <button type="submit" class="submit-btn" style="background:#d97706;">+ เพิ่มคำสั่งคุมคน</button>
             </form>
             <div class="chip-list" id="crowdChipList" style="margin-top:10px;"></div>
+
+            <div class="backup-box">
+                <h4 style="margin-top:0; color:var(--primary-emerald);">💾 สำรองและกู้คืนข้อมูล</h4>
+                <button class="btn-backup" onclick="exportBackupData()">📥 ส่งออกไฟล์ (Export)</button>
+                <button class="btn-restore" onclick="document.getElementById('restoreFileInput').click()">📤 นำเข้าไฟล์ (Import)</button>
+                <input type="file" id="restoreFileInput" accept=".json" style="display:none;" onchange="importBackupData(event)">
+            </div>
         </div>
     </div>
 </div>
 
-<!-- 📺 หน้าต่าง Live Prompter (สำหรับเพื่อนและคุณบนเวที) -->
+<!-- 📺 หน้าต่าง Live Prompter (เพื่อนดูจอสด) -->
 <div id="liveOverlay" class="live-overlay">
     <div class="live-top-bar">
         <div>
@@ -405,6 +625,7 @@
     <div class="live-main-grid">
         <div class="live-chord-center-box">
             <div>
+                <div style="font-size:13px; color:var(--accent-gold); text-transform:uppercase; letter-spacing:1px;" id="liveModeBadgeText">[ LIVE ]</div>
                 <div class="current-title" id="liveCurrentTitle" style="font-size:38px; margin:5px 0;">--</div>
                 <div class="current-badges" style="margin-bottom:8px;">
                     <span class="badge-key" id="liveCurrentKey" style="color:var(--primary-emerald); font-weight:bold;">Key: -</span> | 
@@ -417,7 +638,6 @@
                 <span class="live-no-image-text">ไม่มีรูปภาพคอร์ดสำหรับเพลงนี้</span>
             </div>
 
-            <!-- ช่องฟังเพลง MP3 ในหน้าโชว์สด -->
             <div class="audio-links-box" id="liveAudioLinks" style="width:100%; max-width:400px; justify-content:center; gap:15px; margin-top:10px;"></div>
         </div>
 
@@ -438,7 +658,7 @@
 <div id="qrModal" class="modal-overlay">
     <div class="modal-box">
         <h3 style="color:var(--primary-emerald); margin-top:0;">📱 ลิงก์สำหรับเพื่อนดูหน้าจอสด</h3>
-        <p style="font-size:12px; color:var(--text-secondary); margin-bottom:12px;">ให้เพื่อนสแกนหรือเปิดลิงก์นี้บน iPhone / iPad เพื่อดูคอร์ดและฟังเพลง MP3 พร้อมกัน</p>
+        <p style="font-size:12px; color:var(--text-secondary); margin-bottom:12px;">ให้เพื่อนสแกนหรือเปิดลิงก์นี้บน iPhone / iPad เพื่อดูคอร์ดและฟัง MP3 พร้อมกัน</p>
         <div id="qrcode" style="display:inline-block; background:#fff; padding:10px; border-radius:12px; margin-bottom:10px;"></div>
         <div style="margin-bottom: 12px;">
             <input type="text" id="shareUrlBox" readonly style="font-size:11px; text-align:center; background:#000; color:#10b981;">
@@ -449,9 +669,11 @@
 </div>
 
 <script>
+    let myEnergyChart = null;
     let currentLiveIndex = 0;
     let activePlaylistCache = [];
 
+    // ระบบ Cloud Sync ผ่าน JSONBin.io
     function getCloudConfig() {
         return {
             apiKey: localStorage.getItem('jsonbin_apikey') || '',
@@ -476,7 +698,9 @@
             songs: JSON.parse(localStorage.getItem('music_database') || '[]'),
             playlist: getCurrentPlaylist(),
             grooves: getGrooves(),
-            crowd: getCrowdControls()
+            crowd: getCrowdControls(),
+            history: JSON.parse(localStorage.getItem('show_history') || '[]'),
+            starredPlaylists: JSON.parse(localStorage.getItem('starred_playlists') || '[]')
         };
         try {
             if (config.binId) {
@@ -513,28 +737,45 @@
                 if (data.record.playlist) localStorage.setItem('current_playlist', JSON.stringify(data.record.playlist));
                 if (data.record.grooves) localStorage.setItem('custom_grooves', JSON.stringify(data.record.grooves));
                 if (data.record.crowd) localStorage.setItem('custom_crowd_controls', JSON.stringify(data.record.crowd));
+                if (data.record.history) localStorage.setItem('show_history', JSON.stringify(data.record.history));
+                if (data.record.starredPlaylists) localStorage.setItem('starred_playlists', JSON.stringify(data.record.starredPlaylists));
                 renderSongs();
             }
         } catch(e) { console.error('Cloud Fetch Error:', e); }
     }
 
     function getGrooves() {
-        let defaultGrooves = [{ name: 'Funk & Disco', color: '#8b5cf6' }, { name: 'Rock', color: '#ef4444' }, { name: 'Pop', color: '#fbbf24' }];
+        let defaultGrooves = [
+            { name: 'Funk & Disco', color: '#8b5cf6' },
+            { name: 'Rock & Hard Rock', color: '#ef4444' },
+            { name: 'Pop & R&B', color: '#fbbf24' },
+            { name: 'Jazz & Blues', color: '#3b82f6' },
+            { name: 'สามช่า / ไทบ้าน', color: '#10b981' }
+        ];
         let stored = localStorage.getItem('custom_grooves');
         return stored ? JSON.parse(stored) : defaultGrooves;
     }
-    function saveGrooves(g) { localStorage.setItem('custom_grooves', JSON.stringify(g)); syncToCloud(); }
+    function saveGrooves(grooves) { localStorage.setItem('custom_grooves', JSON.stringify(grooves)); syncToCloud(); }
 
     function getCrowdControls() {
-        let defaultCrowd = [{ name: 'โยกหน้า', color: '#10b981' }, { name: 'โยกข้าง', color: '#8b5cf6' }, { name: 'ร้องตาม', color: '#3b82f6' }, { name: 'ชูมือ', color: '#fbbf24' }];
+        let defaultCrowd = [
+            { name: 'ร้องตาม', color: '#3b82f6' },
+            { name: 'โยกหน้า', color: '#10b981' },
+            { name: 'โยกข้าง', color: '#8b5cf6' },
+            { name: 'ชูมือ', color: '#fbbf24' },
+            { name: 'เต้นสวย', color: '#ec4899' },
+            { name: 'เต้นเลื้อย', color: '#f97316' }
+        ];
         let stored = localStorage.getItem('custom_crowd_controls');
         return stored ? JSON.parse(stored) : defaultCrowd;
     }
-    function saveCrowdControls(c) { localStorage.setItem('custom_crowd_controls', JSON.stringify(c)); syncToCloud(); }
+    function saveCrowdControls(crowd) { localStorage.setItem('custom_crowd_controls', JSON.stringify(crowd)); syncToCloud(); }
 
     function switchTab(tab) {
         document.querySelectorAll('.section-view').forEach(s => s.classList.remove('active'));
-        document.querySelectorAll('.nav-buttons .btn').forEach(b => { if(b.id !== 'tabLiveDisplayBtn') b.classList.remove('active'); });
+        document.querySelectorAll('.nav-buttons .btn').forEach(b => {
+            if(b.id !== 'tabLiveDisplayBtn') b.classList.remove('active');
+        });
 
         if (tab === 'home') {
             document.getElementById('homeSection').classList.add('active');
@@ -544,6 +785,18 @@
             document.getElementById('playlistSection').classList.add('active');
             document.getElementById('tabPlaylistBtn').classList.add('active');
             renderPlaylistBuilder();
+        } else if (tab === 'savedPlaylists') {
+            document.getElementById('savedPlaylistsSection').classList.add('active');
+            document.getElementById('tabSavedPlaylistsBtn').classList.add('active');
+            renderSavedPlaylists();
+        } else if (tab === 'flow') {
+            document.getElementById('flowSection').classList.add('active');
+            document.getElementById('tabFlowBtn').classList.add('active');
+            renderShowFlow();
+        } else if (tab === 'analytics') {
+            document.getElementById('analyticsSection').classList.add('active');
+            document.getElementById('tabAnalyticsBtn').classList.add('active');
+            renderAnalytics();
         } else if (tab === 'form') {
             document.getElementById('formSection').classList.add('active');
             document.getElementById('tabFormBtn').classList.add('active');
@@ -636,28 +889,95 @@
         if (url) { imgPreview.src = url; imgPreview.style.display = 'block'; } else { imgPreview.style.display = 'none'; }
     }
 
+    document.querySelectorAll('.radio-group').forEach(group => {
+        const labels = group.querySelectorAll('label');
+        labels.forEach(label => {
+            label.addEventListener('click', function() {
+                labels.forEach(l => l.classList.remove('selected'));
+                this.classList.add('selected');
+            });
+        });
+    });
+
     function handleSubmit(e) {
         e.preventDefault();
+        const editIndex = parseInt(document.getElementById('editIndex').value);
         let songs = JSON.parse(localStorage.getItem('music_database') || '[]');
+        let usageCount = editIndex >= 0 && songs[editIndex] ? (songs[editIndex].usageCount || 0) : 0;
+        let isStarred = editIndex >= 0 && songs[editIndex] ? (songs[editIndex].isStarred || false) : false;
+
+        let selectedGens = [];
+        document.querySelectorAll('input[name="gen"]:checked').forEach(cb => { selectedGens.push(cb.value); });
         let selectedCrowds = [];
         document.querySelectorAll('input[name="crowdControl"]:checked').forEach(cb => { selectedCrowds.push(cb.value); });
 
         const data = {
             title: document.getElementById('title').value,
+            liveMode: document.querySelector('input[name="liveMode"]:checked')?.value || 'Live',
             songKey: document.getElementById('songKey').value || '-',
             firstChord: document.getElementById('songFirstChord').value || '-',
             groove: document.getElementById('songGroove').value || 'ทั่วไป',
+            speed: document.querySelector('input[name="speed"]:checked')?.value || 'กลาง',
             crowdControl: selectedCrowds.length > 0 ? selectedCrowds.join(', ') : '-',
+            emotion: document.getElementById('songEmotion').value || '-',
+            power: parseInt(document.getElementById('songPower').value) || 50,
             audio1: document.getElementById('audioLink1').value || '',
             audio2: document.getElementById('audioLink2').value || '',
-            image: document.getElementById('songImage').value.trim() || ''
+            image: document.getElementById('songImage').value.trim() || '',
+            size: document.querySelector('input[name="size"]:checked')?.value || 'กลาง',
+            tone: document.querySelector('input[name="tone"]:checked')?.value || 'ปกติ',
+            sex: document.querySelector('input[name="sex"]:checked')?.value || 'ทั้งหมด',
+            gen: selectedGens.length > 0 ? selectedGens.join(', ') : 'All',
+            taste: document.querySelector('input[name="taste"]:checked')?.value || 'ทั้งหมด',
+            news: document.querySelector('input[name="news"]:checked')?.value || 'พอใช้',
+            happy: document.querySelector('input[name="happy"]:checked')?.value || 'พอใช้',
+            usageCount: usageCount,
+            isStarred: isStarred
         };
 
-        songs.unshift(data);
+        if (editIndex >= 0) { songs[editIndex] = data; } else { songs.unshift(data); }
+
         localStorage.setItem('music_database', JSON.stringify(songs));
         syncToCloud();
-        document.getElementById('musicForm').reset();
+        resetForm();
         switchTab('home');
+    }
+
+    function resetForm() {
+        document.getElementById('musicForm').reset();
+        document.getElementById('editIndex').value = "-1";
+        document.getElementById('imgPreview').style.display = 'none';
+        document.getElementById('formTitle').innerText = "เพิ่มข้อมูลเพลงใหม่";
+        document.getElementById('saveBtn').innerText = "บันทึกเพลงลงระบบ Cloud";
+    }
+
+    function editSong(index) {
+        let songs = JSON.parse(localStorage.getItem('music_database') || '[]');
+        let song = songs[index];
+        if(!song) return;
+        switchTab('form');
+        document.getElementById('editIndex').value = index;
+        document.getElementById('title').value = song.title;
+        document.getElementById('songKey').value = song.songKey !== '-' ? song.songKey : '';
+        document.getElementById('songFirstChord').value = song.firstChord !== '-' ? song.firstChord : '';
+        document.getElementById('songGroove').value = song.groove !== 'ทั่วไป' ? song.groove : '';
+        document.getElementById('songEmotion').value = song.emotion !== '-' ? song.emotion : '';
+        document.getElementById('songPower').value = song.power || 50;
+        document.getElementById('audioLink1').value = song.audio1 || '';
+        document.getElementById('audioLink2').value = song.audio2 || '';
+        if(song.image) {
+            document.getElementById('songImage').value = song.image;
+            document.getElementById('imgPreview').src = song.image;
+            document.getElementById('imgPreview').style.display = 'block';
+        }
+    }
+
+    function toggleStarSong(index) {
+        let songs = JSON.parse(localStorage.getItem('music_database') || '[]');
+        songs[index].isStarred = !songs[index].isStarred;
+        localStorage.setItem('music_database', JSON.stringify(songs));
+        syncToCloud();
+        filterSongs();
     }
 
     function renderSongs() {
@@ -669,14 +989,34 @@
     function filterSongs() {
         let songs = JSON.parse(localStorage.getItem('music_database') || '[]');
         let keyword = document.getElementById('searchInput').value.toLowerCase();
+        let fStar = document.getElementById('filterStar').value;
+        let fLiveMode = document.getElementById('filterLiveMode').value;
         let fGroove = document.getElementById('filterGroove').value;
         let fCrowd = document.getElementById('filterCrowd').value;
+        let fKey = document.getElementById('filterKey').value;
+        let fSpeed = document.getElementById('filterSpeed').value;
+        let fEmotion = document.getElementById('filterEmotion').value;
+        let fSex = document.getElementById('filterSex').value;
+        let fGen = document.getElementById('filterGen').value;
+        let fTaste = document.getElementById('filterTaste').value;
+        let fNews = document.getElementById('filterNews').value;
+        let fHappy = document.getElementById('filterHappy').value;
 
         let filtered = songs.filter(song => {
-            let matchKey = song.title.toLowerCase().includes(keyword) || (song.songKey && song.songKey.toLowerCase().includes(keyword));
+            let matchKeyword = song.title.toLowerCase().includes(keyword) || (song.songKey && song.songKey.toLowerCase().includes(keyword));
+            let matchStar = !fStar || (fStar === 'starred' && song.isStarred);
+            let matchLiveMode = !fLiveMode || song.liveMode === fLiveMode;
             let matchGroove = !fGroove || song.groove === fGroove;
             let matchCrowd = !fCrowd || (song.crowdControl && song.crowdControl.includes(fCrowd));
-            return matchKey && matchGroove && matchCrowd;
+            let matchKey = !fKey || song.songKey === fKey;
+            let matchSpeed = !fSpeed || song.speed === fSpeed;
+            let matchEmotion = !fEmotion || song.emotion === fEmotion;
+            let matchSex = !fSex || song.sex === fSex;
+            let matchGen = !fGen || (song.gen && song.gen.includes(fGen));
+            let matchTaste = !fTaste || song.taste === fTaste;
+            let matchNews = !fNews || song.news === fNews;
+            let matchHappy = !fHappy || song.happy === fHappy;
+            return matchKeyword && matchStar && matchLiveMode && matchGroove && matchCrowd && matchKey && matchSpeed && matchEmotion && matchSex && matchGen && matchTaste && matchNews && matchHappy;
         });
         displayFilteredSongs(filtered);
     }
@@ -685,7 +1025,7 @@
         const grid = document.getElementById('videoGrid');
         grid.innerHTML = '';
         if (songs.length === 0) {
-            grid.innerHTML = '<div style="grid-column: 1 / -1; text-align:center; padding:40px; color:var(--text-secondary);">ไม่พบเพลงในระบบ</div>';
+            grid.innerHTML = '<div style="grid-column: 1 / -1; text-align:center; padding:40px; color:var(--text-secondary);">ไม่พบเพลงที่ตรงกับเงื่อนไข</div>';
             return;
         }
         let allSongs = JSON.parse(localStorage.getItem('music_database') || '[]');
@@ -694,6 +1034,9 @@
             let card = document.createElement('div');
             card.className = 'video-card';
             let bgStyle = song.image ? `background-image: url('${song.image}');` : `background: linear-gradient(135deg, #10b981, #060907);`;
+            let starClass = song.isStarred ? 'star-btn starred' : 'star-btn';
+            let starIcon = song.isStarred ? '★' : '☆';
+            
             card.innerHTML = `
                 <div>
                     <div class="video-thumb" style="${bgStyle}">
@@ -701,6 +1044,8 @@
                         <div class="key-badge-box">Key: ${song.songKey || '-'}</div>
                         <div class="chord-badge-box">คอร์ดแรก: ${song.firstChord || '-'}</div>
                         <div class="video-title">🎵 ${song.title}</div>
+                        <div class="video-groove-subtitle">ใช้ไปแล้ว: ${song.usageCount || 0} ครั้ง</div>
+                        <button type="button" class="${starClass}" onclick="toggleStarSong(${realIndex})">${starIcon}</button>
                     </div>
                     <div class="video-info">
                         <span class="badge-groove" style="background: #10b981;">Groove: ${song.groove || 'ทั่วไป'}</span>
@@ -713,7 +1058,10 @@
                 </div>
                 <div class="card-footer">
                     <button class="btn-card-action btn-broadcast" onclick="openLivePropterSingle(${realIndex})">📺 เล่นเดี่ยว</button>
-                    <button class="btn-card-action btn-delete" onclick="deleteSong(${realIndex})">ลบเพลง</button>
+                    <div>
+                        <button class="btn-card-action btn-edit" onclick="editSong(${realIndex})">✏️ แก้ไข</button>
+                        <button class="btn-card-action btn-delete" onclick="deleteSong(${realIndex})">ลบ</button>
+                    </div>
                 </div>
             `;
             grid.appendChild(card);
@@ -768,8 +1116,137 @@
         renderPlaylistBuilder();
     }
 
+    function clearCurrentPlaylist() {
+        if(confirm('ลบเพลงทั้งหมดออกจาก Playlist?')) {
+            saveCurrentPlaylist([]);
+            renderPlaylistBuilder();
+        }
+    }
+
+    function saveFavoritePlaylist() {
+        let playlist = getCurrentPlaylist();
+        if (playlist.length === 0) { alert('เซ็ตลิสต์ว่างเปล่า'); return; }
+        let title = document.getElementById('showTitleInput').value.trim() || `Playlist ${new Date().toLocaleDateString('th-TH')}`;
+        let savedList = JSON.parse(localStorage.getItem('starred_playlists') || '[]');
+        savedList.unshift({ id: Date.now(), title: title, date: new Date().toLocaleString('th-TH'), songs: playlist });
+        localStorage.setItem('starred_playlists', JSON.stringify(savedList));
+        syncToCloud();
+        alert('บันทึก Playlist โปรดเรียบร้อย!');
+        switchTab('savedPlaylists');
+    }
+
+    function renderSavedPlaylists() {
+        let savedList = JSON.parse(localStorage.getItem('starred_playlists') || '[]');
+        let container = document.getElementById('savedPlaylistsContainer');
+        container.innerHTML = '';
+        if (savedList.length === 0) { container.innerHTML = '<p style="color:var(--text-secondary); text-align:center; padding:40px;">ยังไม่มี Playlist โปรด</p>'; return; }
+        savedList.forEach((item, index) => {
+            container.innerHTML += `
+                <div style="background:var(--bg-color); border:1px solid var(--border-color); padding:20px; border-radius:16px; margin-bottom:18px;">
+                    <h4 style="margin:0 0 8px 0; color:var(--star-color);">${item.title} (${item.songs.length} เพลง)</h4>
+                    <button class="btn" style="background:var(--primary-emerald); color:#000; font-weight:bold;" onclick="loadFavoritePlaylist(${index})">📂 โหลดเซ็ตลิสต์นี้</button>
+                    <button class="btn" style="background:#ef4444; color:#fff;" onclick="deleteFavoritePlaylist(${index})">🗑️ ลบ</button>
+                </div>
+            `;
+        });
+    }
+
+    function loadFavoritePlaylist(index) {
+        let savedList = JSON.parse(localStorage.getItem('starred_playlists') || '[]');
+        if (savedList[index]) {
+            saveCurrentPlaylist(savedList[index].songs);
+            document.getElementById('showTitleInput').value = savedList[index].title;
+            switchTab('playlist');
+        }
+    }
+
+    function deleteFavoritePlaylist(index) {
+        let savedList = JSON.parse(localStorage.getItem('starred_playlists') || '[]');
+        savedList.splice(index, 1);
+        localStorage.setItem('starred_playlists', JSON.stringify(savedList));
+        syncToCloud();
+        renderSavedPlaylists();
+    }
+
+    function generateRandomNoGrooveRepeat() {
+        let songs = JSON.parse(localStorage.getItem('music_database') || '[]');
+        if (songs.length < 3) { alert('เพลงในคลังน้อยเกินไป'); return; }
+        let result = [...songs].sort(() => Math.random() - 0.5);
+        saveCurrentPlaylist(result);
+        renderPlaylistBuilder();
+    }
+
+    function generateRandomFromHistoryPattern() {
+        let history = JSON.parse(localStorage.getItem('show_history') || '[]');
+        let songs = JSON.parse(localStorage.getItem('music_database') || '[]');
+        if (history.length === 0) { alert('ยังไม่มีประวัติโชว์'); return; }
+        let target = history[Math.floor(Math.random() * history.length)];
+        let result = [];
+        target.songs.forEach(ts => {
+            let found = songs.find(s => s.groove === ts.groove);
+            if(found) result.push(found);
+        });
+        saveCurrentPlaylist(result.length > 0 ? result : songs);
+        renderPlaylistBuilder();
+    }
+
+    function saveCurrentShow() {
+        let playlist = getCurrentPlaylist();
+        if (playlist.length === 0) { alert('เซ็ตลิสต์ว่างเปล่า'); return; }
+        let title = document.getElementById('showTitleInput').value.trim() || `โชว์วันที่ ${new Date().toLocaleDateString('th-TH')}`;
+        let history = JSON.parse(localStorage.getItem('show_history') || '[]');
+        history.unshift({ title, date: new Date().toLocaleString('th-TH'), songs: playlist });
+        localStorage.setItem('show_history', JSON.stringify(history));
+        syncToCloud();
+        alert('บันทึกโชว์สำเร็จ!');
+        switchTab('flow');
+    }
+
+    function renderAnalytics() {
+        let history = JSON.parse(localStorage.getItem('show_history') || '[]');
+        let container = document.getElementById('analyticsHistoryContainer');
+        container.innerHTML = history.length === 0 ? '<p style="color:var(--text-secondary); text-align:center;">ยังไม่มีประวัติโชว์</p>' : '';
+        history.forEach(h => {
+            container.innerHTML += `<div style="background:var(--bg-color); padding:15px; border-radius:12px; margin-bottom:12px; border:1px solid var(--border-color);"><h4 style="margin:0; color:var(--accent-gold);">${h.title} (${h.songs.length} เพลง)</h4></div>`;
+        });
+    }
+
+    function renderShowFlow() {
+        let songs = getCurrentPlaylist();
+        const tbody = document.getElementById('scriptTableBody');
+        tbody.innerHTML = '';
+        if (songs.length === 0) {
+            tbody.innerHTML = '<tr><td colspan="15" style="text-align:center;">ยังไม่มีเพลงใน Playlist</td></tr>';
+            if(myEnergyChart) myEnergyChart.destroy();
+            return;
+        }
+        let labels = [], dataPower = [];
+        songs.forEach((song, index) => {
+            labels.push(`${index + 1}. ${song.title}`);
+            dataPower.push(song.power || 50);
+            tbody.innerHTML += `
+                <tr>
+                    <td><b>#${index + 1}</b></td><td><b>${song.title}</b></td><td>${song.liveMode || 'Live'}</td>
+                    <td><b style="color:var(--primary-emerald);">${song.songKey || '-'}</b></td>
+                    <td><b style="color:var(--accent-gold);">${song.firstChord || '-'}</b></td>
+                    <td>${song.groove}</td><td>${song.speed || 'กลาง'}</td><td>🎯 ${song.crowdControl || '-'}</td>
+                    <td>${song.sex || '-'}</td><td>${song.gen || '-'}</td><td>${song.taste || '-'}</td><td>${song.news || '-'}</td><td>${song.happy || '-'}</td>
+                    <td><span style="color:var(--primary-emerald); font-weight:bold;">${song.power || 50}</span></td>
+                    <td>${song.tone || 'ปกติ'}</td>
+                </tr>
+            `;
+        });
+        const ctx = document.getElementById('energyChart').getContext('2d');
+        if (myEnergyChart) myEnergyChart.destroy();
+        myEnergyChart = new Chart(ctx, {
+            type: 'line',
+            data: { labels: labels, datasets: [{ label: 'Active Setlist Power', data: dataPower, borderColor: '#10b981', backgroundColor: 'rgba(16, 185, 129, 0.12)', borderWidth: 3, pointRadius: 7, fill: true, tension: 0.35 }] },
+            options: { responsive: true, plugins: { legend: { labels: { color: '#fbbf24' } } }, scales: { y: { min: 0, max: 100, ticks: { color: '#9ca3af' }, grid: { color: '#22332a' } }, x: { ticks: { color: '#9ca3af' }, grid: { color: '#22332a' } } } }
+        });
+    }
+
     function deleteSong(index) {
-        if(confirm('ลบเพลงนี้ออกจากคลังทั้งหมดหรือไม่?')) {
+        if(confirm('ลบเพลงนี้ออกจากคลังทั้งหมด?')) {
             let songs = JSON.parse(localStorage.getItem('music_database') || '[]');
             songs.splice(index, 1);
             localStorage.setItem('music_database', JSON.stringify(songs));
@@ -842,7 +1319,7 @@
         document.getElementById('qrModal').classList.add('active');
         let qrContainer = document.getElementById('qrcode');
         qrContainer.innerHTML = '';
-        let targetUrl = window.location.href;
+        let targetUrl = window.location.href.split('?')[0] + '?live=true';
         document.getElementById('shareUrlBox').value = targetUrl;
         new QRCode(qrContainer, { text: targetUrl, width: 180, height: 180 });
     }
@@ -855,15 +1332,39 @@
 
     function closeQRCodeModal() { document.getElementById('qrModal').classList.remove('active'); }
 
+    function exportBackupData() {
+        let backup = { songs: JSON.parse(localStorage.getItem('music_database') || '[]'), grooves: getGrooves(), crowd: getCrowdControls() };
+        let dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(backup, null, 2));
+        let dl = document.createElement('a'); dl.setAttribute("href", dataStr); dl.setAttribute("download", "21K_Backup.json");
+        document.body.appendChild(dl); dl.click(); dl.remove();
+    }
+
+    function importBackupData(e) {
+        const file = e.target.files[0];
+        if(!file) return;
+        const reader = new FileReader();
+        reader.onload = function(evt) {
+            try {
+                let data = JSON.parse(evt.target.result);
+                if(data.songs) localStorage.setItem('music_database', JSON.stringify(data.songs));
+                if(data.grooves) localStorage.setItem('custom_grooves', JSON.stringify(data.grooves));
+                if(data.crowd) localStorage.setItem('custom_crowd_controls', JSON.stringify(data.crowd));
+                syncToCloud();
+                alert('นำเข้าสำเร็จ!');
+                renderSongs();
+            } catch(err) { alert('ไฟล์ไม่ถูกต้อง'); }
+        };
+        reader.readAsText(file);
+    }
+
     window.onload = async function() {
         await syncFromCloud();
         if (!localStorage.getItem('music_database')) {
             localStorage.setItem('music_database', JSON.stringify([]));
         }
-        
+
         const urlParams = new URLSearchParams(window.location.search);
-        // ถ้าเปิดจากมือถือเพื่อน ให้ซ่อนปุ่มจัดการหลังบ้านทั้งหมด ให้โชว์เฉพาะหน้าจอ Live สด
-        if (urlParams.get('live') || window.location.search.includes('show') || location.hash === '#live') {
+        if (urlParams.get('live') === 'true') {
             document.getElementById('mainNavButtons').style.display = 'none';
             openLivePropter(0);
         } else {
