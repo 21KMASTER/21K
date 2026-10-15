@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>21K List - Live Setlist & Chord Prompter Pro (Cloud Sync Ultimate)</title>
+    <title>21K List - Live Setlist & Chord Prompter Pro (Cloud Sync v1.6)</title>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
     <style>
@@ -97,8 +97,6 @@
             margin-bottom: 9px; border: 1px solid var(--border-color); font-size: 13px;
         }
         .usage-badge { background: #d97706; color: #fff; padding: 2px 7px; border-radius: 6px; font-size: 10px; font-weight: 700; }
-        .mode-badge-live { background: #10b981; color: #000; padding: 2px 6px; border-radius: 6px; font-size: 10px; font-weight: 800; }
-        .mode-badge-data { background: #3b82f6; color: #fff; padding: 2px 6px; border-radius: 6px; font-size: 10px; font-weight: 800; }
 
         .random-tools-box {
             background: rgba(16, 185, 129, 0.08); border: 1px solid var(--border-color);
@@ -153,8 +151,6 @@
         .video-groove-subtitle { font-size: 11px; color: var(--accent-gold); margin-top: 4px; background: rgba(0,0,0,0.65); padding: 2px 8px; border-radius: 10px; z-index: 2; }
         .video-info { padding: 14px; font-size: 12px; color: var(--text-secondary); }
         .badge-groove { display: inline-block; padding: 3px 10px; border-radius: 20px; font-weight: 700; font-size: 11px; color: #fff; margin-bottom: 6px; }
-        .tags-row { display: flex; flex-wrap: wrap; gap: 4px; margin-top: 6px; }
-        .tag { background: var(--bg-color); padding: 2px 7px; border-radius: 6px; font-size: 11px; border: 1px solid var(--border-color); color: #d1d5db; }
         
         .audio-links-box {
             margin-top: 10px; padding-top: 8px; border-top: 1px dashed var(--border-color);
@@ -210,11 +206,6 @@
             background: linear-gradient(135deg, #fbbf24, #d97706) !important;
             color: #000 !important; font-weight: 800; border-color: #fbbf24;
             box-shadow: 0 4px 12px rgba(251, 191, 36, 0.35);
-        }
-        .checkbox-group.gen-group label.checked {
-            background: linear-gradient(135deg, #3b82f6, #1d4ed8) !important;
-            color: #fff !important; border-color: #3b82f6;
-            box-shadow: 0 4px 12px rgba(59, 130, 246, 0.35);
         }
 
         .submit-btn {
@@ -284,7 +275,7 @@
             <div class="app-logo-icon"><span>🎵</span></div>
             <div class="app-title-group">
                 <h1>21K <span>List</span></h1>
-                <div class="app-subtitle">Live Setlist & Chord Prompter Pro (Cloud Sync Ultimate v1.4)</div>
+                <div class="app-subtitle">Live Setlist & Chord Prompter Pro (Cloud Sync v1.6)</div>
             </div>
         </div>
 
@@ -437,7 +428,7 @@
                 <div class="form-group">
                     <label>ประเภทการแสดง (Live / Data):</label>
                     <div class="radio-group" data-name="liveMode">
-                        <label><input type="radio" name="liveMode" value="Live">🎸 [ Live ] เล่นสด</label>
+                        <label class="selected"><input type="radio" name="liveMode" value="Live" checked>🎸 [ Live ] เล่นสด</label>
                         <label><input type="radio" name="liveMode" value="Data">💻 [ Data ] แบ็คกิ้งแทร็ก</label>
                     </div>
                 </div>
@@ -463,7 +454,7 @@
                     <div class="radio-group" data-name="speed">
                         <label><input type="radio" name="speed" value="ช้ามาก">🐢 ช้ามาก</label>
                         <label><input type="radio" name="speed" value="ช้า">🚶 ช้า</label>
-                        <label><input type="radio" name="speed" value="กลาง">🏃 กลาง</label>
+                        <label class="selected"><input type="radio" name="speed" value="กลาง" checked>🏃 กลาง</label>
                         <label><input type="radio" name="speed" value="เร็ว">⚡ เร็ว</label>
                         <label><input type="radio" name="speed" value="เร็วมาก">🔥 เร็วมาก</label>
                     </div>
@@ -483,7 +474,7 @@
                 </div>
                 <div class="form-group">
                     <label for="songPower">Power (1 - 100):</label>
-                    <input type="number" id="songPower" min="1" max="100" placeholder="เช่น 80">
+                    <input type="number" id="songPower" min="1" max="100" value="50" placeholder="เช่น 80">
                 </div>
                 <div class="form-group">
                     <label for="audioLink1">ลิงก์ MP3 Google Drive (1):</label>
@@ -501,68 +492,45 @@
                 <div class="form-group">
                     <label>4. Size:</label>
                     <div class="radio-group" data-name="size">
-                        <label><input type="radio" name="size" value="เล็กมาก">เล็กมาก</label>
-                        <label><input type="radio" name="size" value="เล็ก">เล็ก</label>
-                        <label><input type="radio" name="size" value="กลาง">กลาง</label>
+                        <label class="selected"><input type="radio" name="size" value="กลาง" checked>กลาง</label>
                         <label><input type="radio" name="size" value="ใหญ่">ใหญ่</label>
-                        <label><input type="radio" name="size" value="ใหญ่มาก">ใหญ่มาก</label>
                     </div>
                 </div>
                 <div class="form-group">
                     <label>5. Tone:</label>
                     <div class="radio-group" data-name="tone">
-                        <label><input type="radio" name="tone" value="มืดมาก">มืดมาก</label>
-                        <label><input type="radio" name="tone" value="มืด">มืด</label>
-                        <label><input type="radio" name="tone" value="ปกติ">ปกติ</label>
+                        <label class="selected"><input type="radio" name="tone" value="ปกติ" checked>ปกติ</label>
                         <label><input type="radio" name="tone" value="สว่าง">สว่าง</label>
-                        <label><input type="radio" name="tone" value="สว่างมาก">สว่างมาก</label>
                     </div>
                 </div>
                 <div class="form-group">
                     <label>6. Sex:</label>
                     <div class="radio-group" data-name="sex">
-                        <label><input type="radio" name="sex" value="ชาย">ชาย</label>
-                        <label><input type="radio" name="sex" value="หญิง">หญิง</label>
-                        <label><input type="radio" name="sex" value="ทั้งหมด">ทั้งหมด</label>
+                        <label class="selected"><input type="radio" name="sex" value="ทั้งหมด" checked>ทั้งหมด</label>
                     </div>
                 </div>
                 <div class="form-group">
                     <label>7. Gen (เลือกได้มากกว่า 1 ตัวเลือก):</label>
                     <div class="checkbox-group gen-group" id="genCheckboxGroup">
-                        <label><input type="checkbox" name="gen" value="Gen X">Gen X</label>
-                        <label><input type="checkbox" name="gen" value="Gen Y">Gen Y</label>
-                        <label><input type="checkbox" name="gen" value="Gen Z">Gen Z</label>
-                        <label><input type="checkbox" name="gen" value="All">All</label>
+                        <label class="checked"><input type="checkbox" name="gen" value="All" checked>All</label>
                     </div>
                 </div>
                 <div class="form-group">
                     <label>8. Taste:</label>
                     <div class="radio-group" data-name="taste">
-                        <label><input type="radio" name="taste" value="อินเตอร์">อินเตอร์</label>
-                        <label><input type="radio" name="taste" value="ในเมือง">ในเมือง</label>
-                        <label><input type="radio" name="taste" value="บ้าน">บ้าน</label>
-                        <label><input type="radio" name="taste" value="บ้านมาก">บ้านมาก</label>
-                        <label><input type="radio" name="taste" value="ทั้งหมด">ทั้งหมด</label>
+                        <label class="selected"><input type="radio" name="taste" value="ทั้งหมด" checked>ทั้งหมด</label>
                     </div>
                 </div>
                 <div class="form-group">
                     <label>9. News:</label>
                     <div class="radio-group" data-name="news">
-                        <label><input type="radio" name="news" value="ซ้ำซาก">ซ้ำซาก</label>
-                        <label><input type="radio" name="news" value="ซ้ำ">ซ้ำ</label>
-                        <label><input type="radio" name="news" value="พอใช้">พอใช้</label>
-                        <label><input type="radio" name="news" value="ใหม่">ใหม่</label>
-                        <label><input type="radio" name="news" value="ใหม่มาก">ใหม่มาก</label>
+                        <label class="selected"><input type="radio" name="news" value="พอใช้" checked>พอใช้</label>
                     </div>
                 </div>
                 <div class="form-group">
                     <label>10. Happy:</label>
                     <div class="radio-group" data-name="happy">
-                        <label><input type="radio" name="happy" value="น้อยมาก">น้อยมาก</label>
-                        <label><input type="radio" name="happy" value="น้อย">น้อย</label>
-                        <label><input type="radio" name="happy" value="พอใช้">พอใช้</label>
-                        <label><input type="radio" name="happy" value="มาก">มาก</label>
-                        <label><input type="radio" name="happy" value="มากที่สุด">มากที่สุด</label>
+                        <label class="selected"><input type="radio" name="happy" value="พอใช้" checked>พอใช้</label>
                     </div>
                 </div>
                 <button type="submit" class="submit-btn" id="saveBtn">บันทึกเพลงลงระบบ Cloud</button>
@@ -673,7 +641,6 @@
     let currentLiveIndex = 0;
     let activePlaylistCache = [];
 
-    // ระบบ Cloud Sync ผ่าน JSONBin.io
     function getCloudConfig() {
         return {
             apiKey: localStorage.getItem('jsonbin_apikey') || '',
@@ -911,26 +878,35 @@
         let selectedCrowds = [];
         document.querySelectorAll('input[name="crowdControl"]:checked').forEach(cb => { selectedCrowds.push(cb.value); });
 
+        const liveModeChecked = document.querySelector('input[name="liveMode"]:checked');
+        const speedChecked = document.querySelector('input[name="speed"]:checked');
+        const sizeChecked = document.querySelector('input[name="size"]:checked');
+        const toneChecked = document.querySelector('input[name="tone"]:checked');
+        const sexChecked = document.querySelector('input[name="sex"]:checked');
+        const tasteChecked = document.querySelector('input[name="taste"]:checked');
+        const newsChecked = document.querySelector('input[name="news"]:checked');
+        const happyChecked = document.querySelector('input[name="happy"]:checked');
+
         const data = {
             title: document.getElementById('title').value,
-            liveMode: document.querySelector('input[name="liveMode"]:checked')?.value || 'Live',
+            liveMode: liveModeChecked ? liveModeChecked.value : 'Live',
             songKey: document.getElementById('songKey').value || '-',
             firstChord: document.getElementById('songFirstChord').value || '-',
             groove: document.getElementById('songGroove').value || 'ทั่วไป',
-            speed: document.querySelector('input[name="speed"]:checked')?.value || 'กลาง',
+            speed: speedChecked ? speedChecked.value : 'กลาง',
             crowdControl: selectedCrowds.length > 0 ? selectedCrowds.join(', ') : '-',
             emotion: document.getElementById('songEmotion').value || '-',
             power: parseInt(document.getElementById('songPower').value) || 50,
             audio1: document.getElementById('audioLink1').value || '',
             audio2: document.getElementById('audioLink2').value || '',
             image: document.getElementById('songImage').value.trim() || '',
-            size: document.querySelector('input[name="size"]:checked')?.value || 'กลาง',
-            tone: document.querySelector('input[name="tone"]:checked')?.value || 'ปกติ',
-            sex: document.querySelector('input[name="sex"]:checked')?.value || 'ทั้งหมด',
+            size: sizeChecked ? sizeChecked.value : 'กลาง',
+            tone: toneChecked ? toneChecked.value : 'ปกติ',
+            sex: sexChecked ? sexChecked.value : 'ทั้งหมด',
             gen: selectedGens.length > 0 ? selectedGens.join(', ') : 'All',
-            taste: document.querySelector('input[name="taste"]:checked')?.value || 'ทั้งหมด',
-            news: document.querySelector('input[name="news"]:checked')?.value || 'พอใช้',
-            happy: document.querySelector('input[name="happy"]:checked')?.value || 'พอใช้',
+            taste: tasteChecked ? tasteChecked.value : 'ทั้งหมด',
+            news: newsChecked ? newsChecked.value : 'พอใช้',
+            happy: happyChecked ? happyChecked.value : 'พอใช้',
             usageCount: usageCount,
             isStarred: isStarred
         };
@@ -1079,7 +1055,7 @@
         let container = document.getElementById('currentPlaylistContainer');
         document.getElementById('playlistCountBadge').innerText = `${playlist.length} เพลง`;
         container.innerHTML = '';
-        if (playlist.length === 0) { container.innerHTML = '<p style="color:var(--text-secondary); text-align:center; padding:20px;">ยังไม่มีเพลงในเซ็ตลิสต์</p>'; return; }
+        if (playlist.length === 0) { container.innerHTML = '<p style="color:var(--text-secondary); text-align:center; padding:20px;">ยังไม่มีเพลงในเซ็ตลิสต์</p>'; }
         
         playlist.forEach((song, idx) => {
             container.innerHTML += `
@@ -1094,10 +1070,26 @@
 
     function renderPlaylistLibrary() {
         let songs = JSON.parse(localStorage.getItem('music_database') || '[]');
+        let keyword = document.getElementById('playlistSearch').value.toLowerCase();
         let container = document.getElementById('libraryPickerContainer');
         container.innerHTML = '';
-        songs.forEach((song, origIndex) => {
-            container.innerHTML += `<div class="setlist-song-item" style="background:var(--bg-color);"><div><b>${song.title}</b> [Key: ${song.songKey}]</div><button class="btn" style="padding:4px 10px; font-size:11px; background:var(--primary-emerald); color:#000;" onclick="addToPlaylist(${origIndex})">+ เพิ่ม</button></div>`;
+        
+        let filtered = songs.map((song, origIndex) => ({ song, origIndex })).filter(item => 
+            item.song.title.toLowerCase().includes(keyword) || (item.song.groove && item.song.groove.toLowerCase().includes(keyword))
+        );
+
+        if (filtered.length === 0) {
+            container.innerHTML = '<p style="color:var(--text-secondary); text-align:center;">ไม่พบเพลงในคลัง</p>';
+            return;
+        }
+
+        filtered.forEach(item => {
+            container.innerHTML += `
+                <div class="setlist-song-item" style="background:var(--bg-color);">
+                    <div><b>${item.song.title}</b> [Key: ${item.song.songKey}]</div>
+                    <button class="btn" style="padding:4px 10px; font-size:11px; background:var(--primary-emerald); color:#000;" onclick="addToPlaylist(${item.origIndex})">+ เพิ่ม</button>
+                </div>
+            `;
         });
     }
 
