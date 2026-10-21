@@ -53,17 +53,13 @@
     .neon-glow {
       box-shadow: 0 0 15px rgba(0, 230, 118, 0.25);
     }
-    .neon-text {
-      text-shadow: 0 0 8px rgba(0, 230, 118, 0.4);
-    }
   </style>
 </head>
 <body class="h-screen flex flex-col md:flex-row overflow-hidden select-none">
 
-  <!-- SIDEBAR (JOOX Style) -->
+  <!-- SIDEBAR -->
   <aside class="w-full md:w-64 bg-joox-sidebar border-b md:border-b-0 md:border-r border-joox-border flex flex-col justify-between shrink-0">
     <div>
-      <!-- Brand Logo -->
       <div class="p-5 flex items-center justify-between border-b border-joox-border/50">
         <div class="flex items-center gap-3">
           <div class="w-10 h-10 rounded-xl bg-joox-green flex items-center justify-center text-joox-black font-bold text-xl neon-glow">
@@ -76,7 +72,6 @@
         </div>
       </div>
 
-      <!-- Navigation Menu -->
       <nav class="p-3 space-y-1">
         <button onclick="switchTab('vault')" id="nav-vault" class="nav-btn w-full flex items-center gap-3 px-4 py-3 rounded-lg text-sm font-medium transition text-joox-green bg-joox-hover">
           <i class="fa-solid fa-book-bookmark text-base"></i> คลังคำศัพท์
@@ -90,7 +85,6 @@
       </nav>
     </div>
 
-    <!-- Data Import / Export & Stats -->
     <div class="p-4 border-t border-joox-border bg-joox-sidebar">
       <div class="bg-joox-card p-3 rounded-lg border border-joox-border/60 mb-3">
         <div class="text-xs text-joox-text mb-1">จำนวนคำทั้งหมด</div>
@@ -108,10 +102,9 @@
     </div>
   </aside>
 
-  <!-- MAIN CONTENT AREA -->
+  <!-- MAIN CONTENT -->
   <main class="flex-1 flex flex-col h-full bg-joox-black overflow-hidden relative">
     
-    <!-- TOP BAR -->
     <header class="h-16 border-b border-joox-border px-6 flex items-center justify-between shrink-0 bg-joox-black/80 backdrop-blur z-10">
       <div class="flex items-center gap-4 w-full max-w-xl">
         <div class="relative w-full">
@@ -124,12 +117,10 @@
       </button>
     </header>
 
-    <!-- CONTENT BODY -->
     <div class="flex-1 overflow-y-auto p-6">
 
       <!-- TAB 1: WORD VAULT -->
       <section id="tab-vault" class="space-y-6">
-        <!-- Filter Bar -->
         <div class="bg-joox-card p-4 rounded-xl border border-joox-border space-y-3">
           <div class="flex flex-wrap items-center justify-between gap-3 border-b border-joox-border/50 pb-3">
             <div class="text-sm font-medium text-white flex items-center gap-2">
@@ -139,7 +130,6 @@
           </div>
           
           <div class="grid grid-cols-1 md:grid-cols-3 gap-3">
-            <!-- Syllable Filter -->
             <div>
               <label class="block text-xs text-joox-text mb-1">จำนวนพยางค์</label>
               <select id="filter-syllables" onchange="renderVault()" class="w-full bg-joox-sidebar border border-joox-border rounded-lg p-2 text-xs text-white focus:outline-none focus:border-joox-green">
@@ -150,21 +140,17 @@
                 <option value="4+">4+ พยางค์</option>
               </select>
             </div>
-
-            <!-- Pos Filter -->
             <div>
               <label class="block text-xs text-joox-text mb-1">ชนิดของคำ</label>
               <select id="filter-pos" onchange="renderVault()" class="w-full bg-joox-sidebar border border-joox-border rounded-lg p-2 text-xs text-white focus:outline-none focus:border-joox-green">
                 <option value="">ทั้งหมด</option>
                 <option value="นาม">คำนาม</option>
                 <option value="กริยา">คำกริยา</option>
-                <option value="คุณศัพท์">คำคุณศัพท์ (บอกอารมณ์/ลักษณะ)</option>
+                <option value="คุณศัพท์">คำคุณศัพท์ (บอกอารมณ์)</option>
                 <option value="วิเศษณ์">คำวิเศษณ์</option>
-                <option value="ทั่วไป">ทั่วไป / อื่นๆ</option>
+                <option value="ทั่วไป">ทั่วไป</option>
               </select>
             </div>
-
-            <!-- Mood Filter -->
             <div>
               <label class="block text-xs text-joox-text mb-1">อารมณ์ (Mood)</label>
               <select id="filter-mood" onchange="renderVault()" class="w-full bg-joox-sidebar border border-joox-border rounded-lg p-2 text-xs text-white focus:outline-none focus:border-joox-green">
@@ -181,10 +167,7 @@
           </div>
         </div>
 
-        <!-- Words Grid -->
-        <div id="words-grid" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
-          <!-- Dynamically populated -->
-        </div>
+        <div id="words-grid" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4"></div>
       </section>
 
       <!-- TAB 2: EXTRACT WORDS -->
@@ -193,7 +176,7 @@
           <h2 class="text-lg font-bold text-white mb-1 flex items-center gap-2">
             <i class="fa-solid fa-wand-magic-sparkles text-joox-green"></i> สกัดคำจากบทความ หรือ นิยาย
           </h2>
-          <p class="text-xs text-joox-text mb-4">วางเนื้อหาบทความลงในช่องด้านล่าง ระบบจะทำการตัดคำ คัดคำซ้ำออก และแยกคำศัพท์ให้โดยอัตโนมัติ</p>
+          <p class="text-xs text-joox-text mb-4">วางเนื้อหาลงในช่องด้านล่าง ระบบจะสกัดคำ คัดคำซ้ำ และนำเข้าคลังให้อัตโนมัติ</p>
           
           <textarea id="extract-input" rows="7" placeholder="วางบทความ นิยาย หรือเนื้อเพลงที่นี่..." class="w-full bg-joox-sidebar border border-joox-border rounded-lg p-4 text-sm text-white focus:outline-none focus:border-joox-green mb-4 resize-y placeholder-joox-text/50"></textarea>
           
@@ -204,7 +187,6 @@
           </div>
         </div>
 
-        <!-- Extraction Results Preview -->
         <div id="extract-results-container" class="hidden bg-joox-card p-6 rounded-xl border border-joox-border">
           <div class="flex items-center justify-between mb-4">
             <h3 class="font-bold text-white text-md">ผลลัพธ์การสกัด (<span id="extract-count" class="text-joox-green">0</span> คำ)</h3>
@@ -212,32 +194,43 @@
               <i class="fa-solid fa-floppy-disk"></i> บันทึกคำทั้งหมดลงคลัง
             </button>
           </div>
-          <div id="extract-word-tags" class="flex flex-wrap gap-2 max-h-96 overflow-y-auto p-2 bg-joox-sidebar rounded-lg border border-joox-border">
-            <!-- Dynamically populated tags -->
-          </div>
+          <div id="extract-word-tags" class="flex flex-wrap gap-2 max-h-96 overflow-y-auto p-2 bg-joox-sidebar rounded-lg border border-joox-border"></div>
         </div>
       </section>
 
-      <!-- TAB 3: RHYME FINDER -->
+      <!-- TAB 3: SMART RHYME FINDER -->
       <section id="tab-rhyme" class="hidden space-y-6">
         <div class="bg-joox-card p-6 rounded-xl border border-joox-border">
           <h2 class="text-lg font-bold text-white mb-1 flex items-center gap-2">
-            <i class="fa-solid fa-music text-joox-green"></i> ค้นหาคำคล้องจอง (Rhyme Finder)
+            <i class="fa-solid fa-music text-joox-green"></i> ค้นหาคำคล้องจองสมาร์ท (Phonetic Rhyme Engine)
           </h2>
-          <p class="text-xs text-joox-text mb-4">พิมพ์เพียง 1 คำ (เช่น "ใจ", "รัก", "ฟ้า") เพื่อค้นหาคำที่มีสระ/มาตราตัวสะกดคล้องจองจากคลังของคุณ</p>
+          <p class="text-xs text-joox-text mb-4">พิมพ์เพียง 1 คำ ระบบจะค้นหาทั้ง **สัมผัสตรงเป๊ะ** และ **สัมผัสใกล้เคียง (เสียงสระ/ตัวสะกดคล้ายกัน)**</p>
           
           <div class="flex gap-3 max-w-md">
-            <input type="text" id="rhyme-input" placeholder="พิมพ์คำที่ต้องการหาความคล้องจอง..." class="flex-1 bg-joox-sidebar border border-joox-border rounded-lg px-4 py-2.5 text-sm text-white focus:outline-none focus:border-joox-green">
+            <input type="text" id="rhyme-input" placeholder="พิมพ์คำที่ต้องการ เช่น ใจ, รัก, ลม..." class="flex-1 bg-joox-sidebar border border-joox-border rounded-lg px-4 py-2.5 text-sm text-white focus:outline-none focus:border-joox-green">
             <button onclick="searchRhyme()" class="bg-joox-green hover:bg-joox-darkGreen text-joox-black font-semibold px-5 py-2.5 rounded-lg text-sm transition shrink-0 flex items-center gap-2">
               <i class="fa-solid fa-magnifying-glass"></i> ค้นหา
             </button>
           </div>
         </div>
 
-        <div id="rhyme-results-container" class="hidden space-y-4">
-          <h3 class="font-bold text-white text-md">คำคล้องจองที่พบสำหรับ "<span id="rhyme-target-word" class="text-joox-green"></span>"</h3>
-          <div id="rhyme-results-grid" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
-            <!-- Dynamically populated -->
+        <div id="rhyme-results-container" class="hidden space-y-6">
+          <!-- Exact Matches -->
+          <div>
+            <div class="flex items-center gap-2 mb-3">
+              <span class="w-3 h-3 rounded-full bg-joox-green"></span>
+              <h3 class="font-bold text-white text-md">สัมผัสตรงเป๊ะ (Exact Rhyme)</h3>
+            </div>
+            <div id="exact-rhyme-grid" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4"></div>
+          </div>
+
+          <!-- Near Matches -->
+          <div class="pt-4 border-t border-joox-border/60">
+            <div class="flex items-center gap-2 mb-3">
+              <span class="w-3 h-3 rounded-full bg-amber-400"></span>
+              <h3 class="font-bold text-white text-md">สัมผัสใกล้เคียง / เสียงออกใกล้กัน (Soft/Near Rhyme)</h3>
+            </div>
+            <div id="near-rhyme-grid" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4"></div>
           </div>
         </div>
       </section>
@@ -245,7 +238,7 @@
     </div>
   </main>
 
-  <!-- MODAL: ADD / EDIT WORD -->
+  <!-- MODAL: ADD/EDIT WORD -->
   <div id="word-modal" class="fixed inset-0 bg-black/80 backdrop-blur-sm hidden items-center justify-center p-4 z-50">
     <div class="bg-joox-card border border-joox-border rounded-xl w-full max-w-lg p-6 space-y-4">
       <div class="flex items-center justify-between border-b border-joox-border pb-3">
@@ -309,20 +302,22 @@
     </div>
   </div>
 
-  <!-- JAVASCRIPT LOGIC -->
   <script>
-    // --- STATE MANAGEMENT ---
+    // --- INITIAL DATA ---
     let words = JSON.parse(localStorage.getItem('goldhair_words')) || [
       { id: '1', text: 'ดวงดาว', syllables: '2', pos: 'นาม', mood: 'คิดถึง', note: 'ใช้เปรียบเทียบความฝันหรือคนที่อยู่ไกล' },
       { id: '2', text: 'เหงา', syllables: '1', pos: 'คุณศัพท์', mood: 'เหงา', note: 'ความรู้สึกว่างเปล่า' },
       { id: '3', text: 'กอด', syllables: '1', pos: 'กริยา', mood: 'อบอุ่น', note: 'การแสดงความรัก' },
       { id: '4', text: 'ขอบฟ้า', syllables: '2', pos: 'นาม', mood: 'คิดถึง', note: 'ระยะทางที่ไกลสุดสายตา' },
-      { id: '5', text: 'เจ็บปวด', syllables: '2', pos: 'คุณศัพท์', mood: 'อกหัก', note: 'อารมณ์ความเศร้าเสียใจ' }
+      { id: '5', text: 'เจ็บปวด', syllables: '2', pos: 'คุณศัพท์', mood: 'อกหัก', note: 'อารมณ์ความเศร้าเสียใจ' },
+      { id: '6', text: 'ความฝัน', syllables: '2', pos: 'นาม', mood: 'สดใส', note: 'เป้าหมายชีวิต' },
+      { id: '7', text: 'สายลม', syllables: '2', pos: 'นาม', mood: 'เหงา', note: 'สิ่งที่พัดผ่านไป' },
+      { id: '8', text: 'หัวใจ', syllables: '2', pos: 'นาม', mood: 'อบอุ่น', note: 'ศูนย์รวมความรู้สึก' },
+      { id: '9', text: 'มองตา', syllables: '2', pos: 'กริยา', mood: 'อบอุ่น', note: 'สบตากัน' }
     ];
 
     let extractedWordsBuffer = [];
 
-    // --- INITIALIZATION ---
     document.addEventListener('DOMContentLoaded', () => {
       saveAndRefresh();
     });
@@ -333,7 +328,6 @@
       renderVault();
     }
 
-    // --- NAVIGATION ---
     function switchTab(tab) {
       ['vault', 'extract', 'rhyme'].forEach(t => {
         document.getElementById(`tab-${t}`).classList.add('hidden');
@@ -348,7 +342,6 @@
       activeNav.classList.remove('text-joox-text');
     }
 
-    // --- WORD VAULT RENDER ---
     function renderVault() {
       const search = document.getElementById('global-search').value.toLowerCase();
       const sylFilter = document.getElementById('filter-syllables').value;
@@ -371,9 +364,7 @@
         return;
       }
 
-      filtered.forEach(w => {
-        grid.appendChild(createWordCard(w));
-      });
+      filtered.forEach(w => grid.appendChild(createWordCard(w)));
     }
 
     function createWordCard(word) {
@@ -409,37 +400,106 @@
       renderVault();
     }
 
-    // --- WORD EXTRACTION (THAI WORD SEGMENTATION) ---
+    // --- ADVANCED THAI PHONETIC RHYME ENGINE ---
+    function getPhoneticFeatures(str) {
+      if (!str) return { vowelGroup: '', finalGroup: '', rawTail: '' };
+      const word = str.trim();
+      const lastChar = word.slice(-1);
+
+      // Map Final Consonants (แม่ตัวสะกด)
+      let finalGroup = 'NONE'; // ไม่มีตัวสะกด / แม่ ก กา
+      if (/[กขคฆ]/.test(lastChar)) finalGroup = 'KOK'; // แม่กบ/กด/กน/กง
+      else if (/[บปพฟภ]/.test(lastChar)) finalGroup = 'KOP';
+      else if (/[กดตถทธศษสจชซฎฏฐฑฒ]/.test(lastChar)) finalGroup = 'KOT';
+      else if (/[นณญรลฬ]/.test(lastChar)) finalGroup = 'KON';
+      else if (/[ม]/.test(lastChar)) finalGroup = 'KOM';
+      else if (/[ง]/.test(lastChar)) finalGroup = 'KONG';
+      else if (/[ย]/.test(lastChar)) finalGroup = 'KAE'; // เสียงย
+      else if (/[ว]/.test(lastChar)) finalGroup = 'KOW'; // เสียงว
+
+      // Map Vowel Groups (กลุ่มเสียงสระใกล้เคียง)
+      let vowelGroup = 'OTHER';
+      if (/[าำะั]/.test(word) || word.endsWith('า') || word.endsWith('ำ')) vowelGroup = 'A_GROUP'; // สระอา / อำ / อะ
+      else if (/[ิีืึ]/.test(word)) vowelGroup = 'I_GROUP'; // สระอิ / อี / อึ / อือ
+      else if (/[ุู]/.test(word)) vowelGroup = 'U_GROUP'; // สระอุ / อู
+      else if (/[เแ]/.test(word)) vowelGroup = 'E_GROUP'; // สระเอ / แอ
+      else if (/[โอะอ]/.test(word)) vowelGroup = 'O_GROUP'; // สระโอ / เอาะ / ออ
+      else if (/[ใไอ]/.test(word) || word.endsWith('าย')) vowelGroup = 'AI_GROUP'; // สระไอ / ไอ / อาย
+
+      return { vowelGroup, finalGroup, rawTail: word.slice(-2) };
+    }
+
+    function searchRhyme() {
+      const input = document.getElementById('rhyme-input').value.trim();
+      if (!input) return;
+
+      const targetFeature = getPhoneticFeatures(input);
+
+      const exactMatches = [];
+      const nearMatches = [];
+
+      words.forEach(w => {
+        if (w.text === input) return; // Skip self
+
+        const feat = getPhoneticFeatures(w.text);
+
+        // 1. Exact Match: ท้ายคำลงด้วยสระ+แม่สะกดเดียวกัน
+        if (feat.rawTail === targetFeature.rawTail || (feat.vowelsGroup === targetFeature.vowelsGroup && feat.finalGroup === targetFeature.finalGroup && feat.finalGroup !== 'NONE')) {
+          exactMatches.push(w);
+        } 
+        // 2. Near / Soft Rhyme: สระกลุ่มเดียวกัน หรือ แม่ตัวสะกดกลุ่มเสียงใกล้กัน (เช่น แม่กบ-แม่กด, แม่กน-แม่กม)
+        else if (feat.vowelGroup === targetFeature.vowelGroup || (feat.finalGroup !== 'NONE' && feat.finalGroup === targetFeature.finalGroup)) {
+          nearMatches.push(w);
+        }
+      });
+
+      const container = document.getElementById('rhyme-results-container');
+      const exactGrid = document.getElementById('exact-rhyme-grid');
+      const nearGrid = document.getElementById('near-rhyme-grid');
+
+      exactGrid.innerHTML = '';
+      nearGrid.innerHTML = '';
+
+      if (exactMatches.length === 0) {
+        exactGrid.innerHTML = `<div class="col-span-full py-4 text-xs text-joox-text">ไม่พบสัมผัสตรงเป๊ะในคลัง</div>`;
+      } else {
+        exactMatches.forEach(w => exactGrid.appendChild(createWordCard(w)));
+      }
+
+      if (nearMatches.length === 0) {
+        nearGrid.innerHTML = `<div class="col-span-full py-4 text-xs text-joox-text">ไม่พบคำเสียงใกล้เคียงในคลัง</div>`;
+      } else {
+        nearMatches.forEach(w => nearGrid.appendChild(createWordCard(w)));
+      }
+
+      container.classList.remove('hidden');
+    }
+
+    // --- EXTRACTION LOGIC ---
     function processExtraction() {
       const text = document.getElementById('extract-input').value;
       if (!text.trim()) return;
 
-      // Clean and split words (basic Thai regex tokenizer)
       const rawTokens = text.replace(/[^\u0E00-\u0E7Fa-zA-Z0-9\s]/g, ' ')
                             .split(/\s+/)
                             .filter(w => w.length > 1);
 
-      // Deduplicate against existing words & current input
       const existingSet = new Set(words.map(w => w.text));
       const extractedSet = new Set();
       
       rawTokens.forEach(t => {
-        if (!existingSet.has(t)) {
-          extractedSet.add(t);
-        }
+        if (!existingSet.has(t)) extractedSet.add(t);
       });
 
       extractedWordsBuffer = Array.from(extractedSet);
 
       const container = document.getElementById('extract-results-container');
       const tagsContainer = document.getElementById('extract-word-tags');
-      const countSpan = document.getElementById('extract-count');
-
-      countSpan.innerText = extractedWordsBuffer.length;
+      document.getElementById('extract-count').innerText = extractedWordsBuffer.length;
       tagsContainer.innerHTML = '';
 
       if (extractedWordsBuffer.length === 0) {
-        tagsContainer.innerHTML = `<span class="text-xs text-joox-text p-2">ไม่พบคำใหม่ (คำทั้งหมดมีในคลังแล้วหรือเป็นคำสั้นเกินไป)</span>`;
+        tagsContainer.innerHTML = `<span class="text-xs text-joox-text p-2">ไม่พบคำใหม่</span>`;
       } else {
         extractedWordsBuffer.forEach(word => {
           const tag = document.createElement('span');
@@ -479,45 +539,11 @@
     }
 
     function estimateSyllables(text) {
-      // Basic heuristic for Thai syllable count
       const vowels = (text.match(/[\u0E30-\u0E3A\u0E45-\u0E4E]/g) || []).length;
       return vowels > 0 ? (vowels > 3 ? '4+' : vowels.toString()) : '1';
     }
 
-    // --- RHYME ENGINE ---
-    function searchRhyme() {
-      const input = document.getElementById('rhyme-input').value.trim();
-      if (!input) return;
-
-      const targetVowels = extractThaiVowels(input);
-      
-      const matched = words.filter(w => {
-        const wVowels = extractThaiVowels(w.text);
-        return targetVowels && wVowels && targetVowels === wVowels;
-      });
-
-      document.getElementById('rhyme-target-word').innerText = input;
-      const grid = document.getElementById('rhyme-results-grid');
-      grid.innerHTML = '';
-
-      if (matched.length === 0) {
-        grid.innerHTML = `<div class="col-span-full py-8 text-center text-joox-text text-sm">ไม่พบคำคล้องจองในคลังคำศัพท์ของคุณ</div>`;
-      } else {
-        matched.forEach(w => grid.appendChild(createWordCard(w)));
-      }
-
-      document.getElementById('rhyme-results-container').classList.remove('hidden');
-    }
-
-    function extractThaiVowels(str) {
-      if (!str) return '';
-      // Extract tail vowel sound pattern
-      const tail = str.slice(-2);
-      const matches = tail.match(/[\u0E30-\u0E3A\u0E45-\u0E4E]/g);
-      return matches ? matches.join('') : str.slice(-1);
-    }
-
-    // --- MODAL ACTIONS ---
+    // --- MODAL FUNCTIONS ---
     function openAddWordModal() {
       document.getElementById('modal-title').innerText = 'เพิ่มคำศัพท์ใหม่';
       document.getElementById('modal-word-id').value = '';
@@ -562,7 +588,6 @@
       if (!text) return;
 
       if (id) {
-        // Edit
         const word = words.find(w => w.id === id);
         if (word) {
           word.text = text;
@@ -572,15 +597,7 @@
           word.note = note;
         }
       } else {
-        // Add
-        words.push({
-          id: Date.now().toString(),
-          text,
-          syllables,
-          pos,
-          mood,
-          note
-        });
+        words.push({ id: Date.now().toString(), text, syllables, pos, mood, note });
       }
 
       saveAndRefresh();
@@ -594,7 +611,6 @@
       }
     }
 
-    // --- IMPORT / EXPORT ---
     function exportData() {
       const blob = new Blob([JSON.stringify(words, null, 2)], { type: 'application/json' });
       const a = document.createElement('a');
