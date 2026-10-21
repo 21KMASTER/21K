@@ -198,40 +198,31 @@
         </div>
       </section>
 
-      <!-- TAB 3: SMART RHYME FINDER -->
+      <!-- TAB 3: EXACT RHYME FINDER -->
       <section id="tab-rhyme" class="hidden space-y-6">
         <div class="bg-joox-card p-6 rounded-xl border border-joox-border">
           <h2 class="text-lg font-bold text-white mb-1 flex items-center gap-2">
-            <i class="fa-solid fa-music text-joox-green"></i> ค้นหาคำคล้องจองสมาร์ท (Phonetic Rhyme Engine)
+            <i class="fa-solid fa-music text-joox-green"></i> ค้นหาคำคล้องจอง (Exact Rhyme Finder)
           </h2>
-          <p class="text-xs text-joox-text mb-4">พิมพ์เพียง 1 คำ ระบบจะค้นหาทั้ง **สัมผัสตรงเป๊ะ** และ **สัมผัสใกล้เคียง (เสียงสระ/ตัวสะกดคล้ายกัน)**</p>
+          <p class="text-xs text-joox-text mb-4">พิมพ์เพียง 1 คำ ระบบจะคัดเฉพาะคำที่มี **สระ และ แม่ตัวสะกด ตรงกันเป๊ะ 100%** มาแสดงเท่านั้น</p>
           
           <div class="flex gap-3 max-w-md">
-            <input type="text" id="rhyme-input" placeholder="พิมพ์คำที่ต้องการ เช่น ใจ, รัก, ลม..." class="flex-1 bg-joox-sidebar border border-joox-border rounded-lg px-4 py-2.5 text-sm text-white focus:outline-none focus:border-joox-green">
+            <input type="text" id="rhyme-input" onkeypress="if(event.key==='Enter') searchRhyme()" placeholder="พิมพ์คำที่ต้องการ เช่น ใจ, รัก, ลม, ดาว..." class="flex-1 bg-joox-sidebar border border-joox-border rounded-lg px-4 py-2.5 text-sm text-white focus:outline-none focus:border-joox-green">
             <button onclick="searchRhyme()" class="bg-joox-green hover:bg-joox-darkGreen text-joox-black font-semibold px-5 py-2.5 rounded-lg text-sm transition shrink-0 flex items-center gap-2">
               <i class="fa-solid fa-magnifying-glass"></i> ค้นหา
             </button>
           </div>
         </div>
 
-        <div id="rhyme-results-container" class="hidden space-y-6">
-          <!-- Exact Matches -->
-          <div>
-            <div class="flex items-center gap-2 mb-3">
+        <div id="rhyme-results-container" class="hidden space-y-4">
+          <div class="flex items-center justify-between border-b border-joox-border pb-3">
+            <h3 class="font-bold text-white text-md flex items-center gap-2">
               <span class="w-3 h-3 rounded-full bg-joox-green"></span>
-              <h3 class="font-bold text-white text-md">สัมผัสตรงเป๊ะ (Exact Rhyme)</h3>
-            </div>
-            <div id="exact-rhyme-grid" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4"></div>
+              คำที่คล้องจองตรงเป๊ะกับ "<span id="rhyme-target-word" class="text-joox-green"></span>"
+              <span id="rhyme-count-badge" class="text-xs bg-joox-sidebar border border-joox-border px-2.5 py-0.5 rounded-full text-joox-text">0 คำ</span>
+            </h3>
           </div>
-
-          <!-- Near Matches -->
-          <div class="pt-4 border-t border-joox-border/60">
-            <div class="flex items-center gap-2 mb-3">
-              <span class="w-3 h-3 rounded-full bg-amber-400"></span>
-              <h3 class="font-bold text-white text-md">สัมผัสใกล้เคียง / เสียงออกใกล้กัน (Soft/Near Rhyme)</h3>
-            </div>
-            <div id="near-rhyme-grid" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4"></div>
-          </div>
+          <div id="exact-rhyme-grid" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4"></div>
         </div>
       </section>
 
@@ -313,7 +304,8 @@
       { id: '6', text: 'ความฝัน', syllables: '2', pos: 'นาม', mood: 'สดใส', note: 'เป้าหมายชีวิต' },
       { id: '7', text: 'สายลม', syllables: '2', pos: 'นาม', mood: 'เหงา', note: 'สิ่งที่พัดผ่านไป' },
       { id: '8', text: 'หัวใจ', syllables: '2', pos: 'นาม', mood: 'อบอุ่น', note: 'ศูนย์รวมความรู้สึก' },
-      { id: '9', text: 'มองตา', syllables: '2', pos: 'กริยา', mood: 'อบอุ่น', note: 'สบตากัน' }
+      { id: '9', text: 'มองตา', syllables: '2', pos: 'กริยา', mood: 'อบอุ่น', note: 'สบตากัน' },
+      { id: '10', text: 'น้ำตา', syllables: '2', pos: 'นาม', mood: 'เศร้า', note: 'หยดน้ำตา' }
     ];
 
     let extractedWordsBuffer = [];
@@ -400,79 +392,76 @@
       renderVault();
     }
 
-    // --- ADVANCED THAI PHONETIC RHYME ENGINE ---
-    function getPhoneticFeatures(str) {
-      if (!str) return { vowelGroup: '', finalGroup: '', rawTail: '' };
+    // --- STRICT EXACT THAI RHYME ENGINE ---
+    function getExactRhymeKey(str) {
+      if (!str) return '';
       const word = str.trim();
+      
+      // ดึงอักขระตัวสุดท้ายเพื่อหาแม่ตัวสะกด
       const lastChar = word.slice(-1);
-
-      // Map Final Consonants (แม่ตัวสะกด)
-      let finalGroup = 'NONE'; // ไม่มีตัวสะกด / แม่ ก กา
-      if (/[กขคฆ]/.test(lastChar)) finalGroup = 'KOK'; // แม่กบ/กด/กน/กง
+      
+      // 1. ระบุแม่ตัวสะกดแบบตรงเป๊ะ (Final Consonant Group)
+      let finalGroup = 'NONE'; // แม่ ก กา (ไม่มีตัวสะกด)
+      if (/[กขคฆ]/.test(lastChar)) finalGroup = 'KOK';
       else if (/[บปพฟภ]/.test(lastChar)) finalGroup = 'KOP';
       else if (/[กดตถทธศษสจชซฎฏฐฑฒ]/.test(lastChar)) finalGroup = 'KOT';
       else if (/[นณญรลฬ]/.test(lastChar)) finalGroup = 'KON';
       else if (/[ม]/.test(lastChar)) finalGroup = 'KOM';
       else if (/[ง]/.test(lastChar)) finalGroup = 'KONG';
-      else if (/[ย]/.test(lastChar)) finalGroup = 'KAE'; // เสียงย
-      else if (/[ว]/.test(lastChar)) finalGroup = 'KOW'; // เสียงว
+      else if (/[ย]/.test(lastChar) && !/[เแ]/.test(word.slice(-2,-1))) finalGroup = 'KAE';
+      else if (/[ว]/.test(lastChar) && !/[เ]/.test(word.slice(-2,-1))) finalGroup = 'KOW';
 
-      // Map Vowel Groups (กลุ่มเสียงสระใกล้เคียง)
-      let vowelGroup = 'OTHER';
-      if (/[าำะั]/.test(word) || word.endsWith('า') || word.endsWith('ำ')) vowelGroup = 'A_GROUP'; // สระอา / อำ / อะ
-      else if (/[ิีืึ]/.test(word)) vowelGroup = 'I_GROUP'; // สระอิ / อี / อึ / อือ
-      else if (/[ุู]/.test(word)) vowelGroup = 'U_GROUP'; // สระอุ / อู
-      else if (/[เแ]/.test(word)) vowelGroup = 'E_GROUP'; // สระเอ / แอ
-      else if (/[โอะอ]/.test(word)) vowelGroup = 'O_GROUP'; // สระโอ / เอาะ / ออ
-      else if (/[ใไอ]/.test(word) || word.endsWith('าย')) vowelGroup = 'AI_GROUP'; // สระไอ / ไอ / อาย
+      // 2. ระบุเสียงสระแบบระบุชัดเจน (Exact Vowel Signature)
+      let vowelKey = 'OTHER';
+      
+      if (/[ใไอ]/.test(word) || word.endsWith('าย')) vowelKey = 'V_AI'; // ไอ / ใอ / าย
+      else if (word.endsWith('ำ')) vowelKey = 'V_AM'; // อำ
+      else if (/[า]/.test(word) || word.endsWith('า')) vowelKey = 'V_AA'; // อา
+      else if (/[ะั]/.test(word)) vowelKey = 'V_A'; // อะ / ไม้หันอากาศ
+      else if (/[ิี]/.test(word)) vowelKey = 'V_II'; // อิ / อี
+      else if (/[ึื]/.test(word)) vowelKey = 'V_UE'; // อึ / อือ
+      else if (/[ุู]/.test(word)) vowelKey = 'V_UU'; // อุ / อู
+      else if (/[เ]/.test(word) && /[อ]/.test(word)) vowelKey = 'V_ER'; // เออ
+      else if (/[เ]/.test(word) && !/[แ]/.test(word)) vowelKey = 'V_EE'; // เอ
+      else if (/[แ]/.test(word)) vowelKey = 'V_AE'; // แอ
+      else if (/[โ]/.test(word)) vowelKey = 'V_OO'; // โอ
+      else if (/[อ]/.test(word)) vowelKey = 'V_OR'; // ออ
+      else if (/[ว]/.test(word) && finalGroup === 'NONE') vowelKey = 'V_UA'; // อัว
+      else if (/[เ]/.test(word) && /[ี]/.test(word)) vowelKey = 'V_IA'; // เอีย
 
-      return { vowelGroup, finalGroup, rawTail: word.slice(-2) };
+      return `${vowelsKey}_${finalGroup}`;
     }
 
     function searchRhyme() {
       const input = document.getElementById('rhyme-input').value.trim();
       if (!input) return;
 
-      const targetFeature = getPhoneticFeatures(input);
+      const targetKey = getExactRhymeKey(input);
 
-      const exactMatches = [];
-      const nearMatches = [];
-
-      words.forEach(w => {
-        if (w.text === input) return; // Skip self
-
-        const feat = getPhoneticFeatures(w.text);
-
-        // 1. Exact Match: ท้ายคำลงด้วยสระ+แม่สะกดเดียวกัน
-        if (feat.rawTail === targetFeature.rawTail || (feat.vowelsGroup === targetFeature.vowelsGroup && feat.finalGroup === targetFeature.finalGroup && feat.finalGroup !== 'NONE')) {
-          exactMatches.push(w);
-        } 
-        // 2. Near / Soft Rhyme: สระกลุ่มเดียวกัน หรือ แม่ตัวสะกดกลุ่มเสียงใกล้กัน (เช่น แม่กบ-แม่กด, แม่กน-แม่กม)
-        else if (feat.vowelGroup === targetFeature.vowelGroup || (feat.finalGroup !== 'NONE' && feat.finalGroup === targetFeature.finalGroup)) {
-          nearMatches.push(w);
-        }
+      // คัดเฉพาะคำที่ Key สระ + แม่สะกด ตรงกันเป๊ะ 100%
+      const exactMatches = words.filter(w => {
+        if (w.text === input) return false; // ไม่เอาคำเดิม
+        return getExactRhymeKey(w.text) === targetKey;
       });
 
-      const container = document.getElementById('rhyme-results-container');
+      document.getElementById('rhyme-target-word').innerText = input;
+      document.getElementById('rhyme-count-badge').innerText = `${exactMatches.length} คำ`;
+      
       const exactGrid = document.getElementById('exact-rhyme-grid');
-      const nearGrid = document.getElementById('near-rhyme-grid');
-
       exactGrid.innerHTML = '';
-      nearGrid.innerHTML = '';
 
       if (exactMatches.length === 0) {
-        exactGrid.innerHTML = `<div class="col-span-full py-4 text-xs text-joox-text">ไม่พบสัมผัสตรงเป๊ะในคลัง</div>`;
+        exactGrid.innerHTML = `
+          <div class="col-span-full py-12 text-center border border-dashed border-joox-border rounded-xl bg-joox-sidebar/50">
+            <i class="fa-solid fa-circle-exclamation text-2xl text-joox-text mb-2"></i>
+            <div class="text-sm text-white font-medium">ไม่พบคำที่มีสัมผัสตรงเป๊ะกับ "${input}" ในคลัง</div>
+            <div class="text-xs text-joox-text mt-1">ลองเพิ่มคำที่มีสระ/ตัวสะกดตรงกันเข้าคลังผ่านเมนู "สกัดคำ" หรือ "เพิ่มคำใหม่"</div>
+          </div>`;
       } else {
         exactMatches.forEach(w => exactGrid.appendChild(createWordCard(w)));
       }
 
-      if (nearMatches.length === 0) {
-        nearGrid.innerHTML = `<div class="col-span-full py-4 text-xs text-joox-text">ไม่พบคำเสียงใกล้เคียงในคลัง</div>`;
-      } else {
-        nearMatches.forEach(w => nearGrid.appendChild(createWordCard(w)));
-      }
-
-      container.classList.remove('hidden');
+      document.getElementById('rhyme-results-container').classList.remove('hidden');
     }
 
     // --- EXTRACTION LOGIC ---
