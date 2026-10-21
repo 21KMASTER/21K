@@ -176,22 +176,22 @@
           <h2 class="text-lg font-bold text-white mb-1 flex items-center gap-2">
             <i class="fa-solid fa-wand-magic-sparkles text-joox-green"></i> สกัดคำจากบทความ หรือ นิยาย
           </h2>
-          <p class="text-xs text-joox-text mb-4">วางเนื้อหาลงในช่องด้านล่าง ระบบจะสกัดคำ คัดคำซ้ำ และนำเข้าคลังให้อัตโนมัติ</p>
+          <p class="text-xs text-joox-text mb-4">วางเนื้อหาลงในช่องด้านล่าง ระบบจะแยกเป็นประโยค คัดประโยคซ้ำ และเลือกบันทึกลงคลัง</p>
           
           <textarea id="extract-input" rows="7" placeholder="วางบทความ นิยาย หรือเนื้อเพลงที่นี่..." class="w-full bg-joox-sidebar border border-joox-border rounded-lg p-4 text-sm text-white focus:outline-none focus:border-joox-green mb-4 resize-y placeholder-joox-text/50"></textarea>
           
           <div class="flex justify-end">
             <button onclick="processExtraction()" class="bg-joox-green hover:bg-joox-darkGreen text-joox-black font-semibold px-6 py-2.5 rounded-lg text-sm transition flex items-center gap-2 neon-glow">
-              <i class="fa-solid fa-gears"></i> เริ่มการสกัดคำ
+              <i class="fa-solid fa-gears"></i> แยกประโยค
             </button>
           </div>
         </div>
 
         <div id="extract-results-container" class="hidden bg-joox-card p-6 rounded-xl border border-joox-border">
           <div class="flex items-center justify-between mb-4">
-            <h3 class="font-bold text-white text-md">ผลลัพธ์การสกัด (<span id="extract-count" class="text-joox-green">0</span> คำ)</h3>
+            <h3 class="font-bold text-white text-md">ประโยคที่พบ (<span id="extract-count" class="text-joox-green">0</span> คำ)</h3>
             <button onclick="saveExtractedWords()" class="bg-joox-green hover:bg-joox-darkGreen text-joox-black font-semibold px-4 py-2 rounded-lg text-xs transition flex items-center gap-2">
-              <i class="fa-solid fa-floppy-disk"></i> บันทึกคำทั้งหมดลงคลัง
+              <i class="fa-solid fa-floppy-disk"></i> บันทึกประโยคทั้งหมดลงคลัง
             </button>
           </div>
           <div id="extract-word-tags" class="flex flex-wrap gap-2 max-h-96 overflow-y-auto p-2 bg-joox-sidebar rounded-lg border border-joox-border"></div>
@@ -204,10 +204,10 @@
           <h2 class="text-lg font-bold text-white mb-1 flex items-center gap-2">
             <i class="fa-solid fa-music text-joox-green"></i> ค้นหาคำคล้องจอง (Exact Rhyme Finder)
           </h2>
-          <p class="text-xs text-joox-text mb-4">พิมพ์เพียง 1 คำ ระบบจะคัดเฉพาะคำที่มี **สระ และ แม่ตัวสะกด ตรงกันเป๊ะ 100%** มาแสดงเท่านั้น</p>
+          <p class="text-xs text-joox-text mb-4">พิมพ์คำเดียว ระบบจะดูคำท้ายประโยค แล้วแสดงทุกประโยคที่ลงท้ายด้วยเสียงคล้องจองกัน เช่น ใจ / ไหม / ใคร / ไหว</p>
           
           <div class="flex gap-3 max-w-md">
-            <input type="text" id="rhyme-input" onkeypress="if(event.key==='Enter') searchRhyme()" placeholder="พิมพ์คำที่ต้องการ เช่น ใจ, รัก, ลม, ดาว..." class="flex-1 bg-joox-sidebar border border-joox-border rounded-lg px-4 py-2.5 text-sm text-white focus:outline-none focus:border-joox-green">
+            <input type="text" id="rhyme-input" onkeypress="if(event.key==='Enter') searchRhyme()" placeholder="พิมพ์คำ เช่น ใจ, ทำไม, ใคร, ไหวไหม..." class="flex-1 bg-joox-sidebar border border-joox-border rounded-lg px-4 py-2.5 text-sm text-white focus:outline-none focus:border-joox-green">
             <button onclick="searchRhyme()" class="bg-joox-green hover:bg-joox-darkGreen text-joox-black font-semibold px-5 py-2.5 rounded-lg text-sm transition shrink-0 flex items-center gap-2">
               <i class="fa-solid fa-magnifying-glass"></i> ค้นหา
             </button>
@@ -218,7 +218,7 @@
           <div class="flex items-center justify-between border-b border-joox-border pb-3">
             <h3 class="font-bold text-white text-md flex items-center gap-2">
               <span class="w-3 h-3 rounded-full bg-joox-green"></span>
-              คำที่คล้องจองตรงเป๊ะกับ "<span id="rhyme-target-word" class="text-joox-green"></span>"
+              ประโยคที่ลงท้ายด้วยเสียงคล้องจองกับ "<span id="rhyme-target-word" class="text-joox-green"></span>"
               <span id="rhyme-count-badge" class="text-xs bg-joox-sidebar border border-joox-border px-2.5 py-0.5 rounded-full text-joox-text">0 คำ</span>
             </h3>
           </div>
@@ -352,7 +352,7 @@
       grid.innerHTML = '';
 
       if (filtered.length === 0) {
-        grid.innerHTML = `<div class="col-span-full py-12 text-center text-joox-text text-sm">ไม่พบคำศัพท์ที่ค้นหา</div>`;
+        grid.innerHTML = `<div class="col-span-full py-12 text-center text-joox-text text-sm">ไม่พบคำหรือประโยคที่ค้นหา</div>`;
         return;
       }
 
@@ -392,56 +392,76 @@
       renderVault();
     }
 
-    // --- STRICT EXACT THAI RHYME ENGINE ---
-    function getExactRhymeKey(str) {
-      if (!str) return '';
-      const word = str.trim();
-      
-      // ดึงอักขระตัวสุดท้ายเพื่อหาแม่ตัวสะกด
-      const lastChar = word.slice(-1);
-      
-      // 1. ระบุแม่ตัวสะกดแบบตรงเป๊ะ (Final Consonant Group)
-      let finalGroup = 'NONE'; // แม่ ก กา (ไม่มีตัวสะกด)
-      if (/[กขคฆ]/.test(lastChar)) finalGroup = 'KOK';
-      else if (/[บปพฟภ]/.test(lastChar)) finalGroup = 'KOP';
-      else if (/[กดตถทธศษสจชซฎฏฐฑฒ]/.test(lastChar)) finalGroup = 'KOT';
-      else if (/[นณญรลฬ]/.test(lastChar)) finalGroup = 'KON';
-      else if (/[ม]/.test(lastChar)) finalGroup = 'KOM';
-      else if (/[ง]/.test(lastChar)) finalGroup = 'KONG';
-      else if (/[ย]/.test(lastChar) && !/[เแ]/.test(word.slice(-2,-1))) finalGroup = 'KAE';
-      else if (/[ว]/.test(lastChar) && !/[เ]/.test(word.slice(-2,-1))) finalGroup = 'KOW';
+    // --- THAI SONGWRITER RHYME SEARCH ---
+    // จัดสัมผัสตามเสียงสระและเสียงตัวสะกดท้ายพยางค์ ไม่สนเสียงวรรณยุกต์
+    function normalizeThai(text) {
+      return (text || '').normalize('NFC').replace(/[ๆฯ.,!?;:()\[\]{}"“”‘’…—–\-]/g, ' ').trim();
+    }
 
-      // 2. ระบุเสียงสระแบบระบุชัดเจน (Exact Vowel Signature)
-      let vowelKey = 'OTHER';
-      
-      if (/[ใไอ]/.test(word) || word.endsWith('าย')) vowelKey = 'V_AI'; // ไอ / ใอ / าย
-      else if (word.endsWith('ำ')) vowelKey = 'V_AM'; // อำ
-      else if (/[า]/.test(word) || word.endsWith('า')) vowelKey = 'V_AA'; // อา
-      else if (/[ะั]/.test(word)) vowelKey = 'V_A'; // อะ / ไม้หันอากาศ
-      else if (/[ิี]/.test(word)) vowelKey = 'V_II'; // อิ / อี
-      else if (/[ึื]/.test(word)) vowelKey = 'V_UE'; // อึ / อือ
-      else if (/[ุู]/.test(word)) vowelKey = 'V_UU'; // อุ / อู
-      else if (/[เ]/.test(word) && /[อ]/.test(word)) vowelKey = 'V_ER'; // เออ
-      else if (/[เ]/.test(word) && !/[แ]/.test(word)) vowelKey = 'V_EE'; // เอ
-      else if (/[แ]/.test(word)) vowelKey = 'V_AE'; // แอ
-      else if (/[โ]/.test(word)) vowelKey = 'V_OO'; // โอ
-      else if (/[อ]/.test(word)) vowelKey = 'V_OR'; // ออ
-      else if (/[ว]/.test(word) && finalGroup === 'NONE') vowelKey = 'V_UA'; // อัว
-      else if (/[เ]/.test(word) && /[ี]/.test(word)) vowelKey = 'V_IA'; // เอีย
+    function lastWordOf(text) {
+      const parts = normalizeThai(text).split(/\s+/).filter(Boolean);
+      return parts.length ? parts[parts.length - 1] : '';
+    }
 
-      return `${vowelsKey}_${finalGroup}`;
+    function getRhymeKey(text) {
+      const word = lastWordOf(text).replace(/[^\u0E00-\u0E7F]/g, '').replace(/[่-๋็์]/g, '');
+      if (!word) return '';
+
+      // เสียงไอรวม ใ-, ไ-, -าย เช่น ใจ/ไหม/ใคร/ไหว/สาย
+      // สระประสมและสระเกินต้องตรวจสอบก่อนสระเดี่ยว
+      let vowel = '';
+      if (/[ใไ]/.test(word) || /าย$/.test(word)) vowel = 'AI';
+      else if (/เ/.test(word) && /า/.test(word)) vowel = 'AO';
+      else if (/เ/.test(word) && /ี/.test(word) && /ว$/.test(word)) vowel = 'IAO';
+      else if (/เ/.test(word) && /ี/.test(word)) vowel = 'IA';
+      else if (/เ/.test(word) && /ื/.test(word)) vowel = 'UEA';
+      else if (/ั/.test(word) && /ว$/.test(word)) vowel = 'UA';
+      else if (/อัว/.test(word)) vowel = 'UA';
+      else if (/ำ/.test(word) || /าม$/.test(word)) vowel = 'AM';
+      else if (/โ/.test(word)) vowel = 'O_LONG';
+      else if (/แ/.test(word)) vowel = /็/.test(word) ? 'AE_SHORT' : 'AE_LONG';
+      else if (/เ/.test(word)) vowel = /็|แ/.test(word) ? 'E_SHORT' : (/อ/.test(word) ? 'OE' : 'E_LONG');
+      else if (/ั/.test(word) || /ะ/.test(word)) vowel = /ั/.test(word) ? 'A_SHORT' : 'A_SHORT';
+      else if (/ิ/.test(word)) vowel = 'I_SHORT';
+      else if (/ี/.test(word)) vowel = 'I_LONG';
+      else if (/ึ/.test(word)) vowel = 'UE_SHORT';
+      else if (/ื/.test(word)) vowel = 'UE_LONG';
+      else if (/ุ/.test(word)) vowel = 'U_SHORT';
+      else if (/ู/.test(word)) vowel = 'U_LONG';
+      else if (/อ/.test(word)) vowel = 'OR_LONG';
+      else if (/า/.test(word)) vowel = 'AA_LONG';
+      else vowel = 'UNKNOWN';
+
+      // ตัวสะกดไทยหลายรูปออกเสียงท้ายเหมือนกัน (แม่กก กด กบ กน กม เกย เกอว)
+      // แยกเสียงท้ายเพื่อไม่ให้สระเดียวกันแต่ตัวสะกดคนละเสียงถูกรวมผิดกลุ่ม
+      const last = word.slice(-1);
+      let coda = 'OPEN';
+      if (/[กขคฆ]/.test(last)) coda = 'K';
+      else if (/[ดจชซฎฏฐฑฒตถทธศษส]/.test(last)) coda = 'T';
+      else if (/[บปพฟภ]/.test(last)) coda = 'P';
+      else if (/[นณญรลฬ]/.test(last)) coda = 'N';
+      else if (last === 'ม') coda = 'M';
+      else if (last === 'ง') coda = 'NG';
+      else if (last === 'ย') coda = 'Y';
+      else if (last === 'ว') coda = 'W';
+
+      // ใ/ไ และ -าย มีเสียงท้ายเป็นสระไอ ไม่มีตัวสะกดแยก
+      if (vowel === 'AI') coda = 'OPEN';
+      // สระอำมีเสียง ม ปิดท้าย แม้ไม่มี ม เขียนเป็นตัวสะกด
+      if (vowel === 'AM') coda = 'M';
+      return `${vowel}_${coda}`;
     }
 
     function searchRhyme() {
       const input = document.getElementById('rhyme-input').value.trim();
       if (!input) return;
 
-      const targetKey = getExactRhymeKey(input);
+      const targetKey = getRhymeKey(input);
 
-      // คัดเฉพาะคำที่ Key สระ + แม่สะกด ตรงกันเป๊ะ 100%
+      // ค้นจากคำท้ายของแต่ละประโยค/วลีที่เก็บไว้ และไม่แสดงรายการที่เป็นคำค้นเดียวกัน
       const exactMatches = words.filter(w => {
-        if (w.text === input) return false; // ไม่เอาคำเดิม
-        return getExactRhymeKey(w.text) === targetKey;
+        if (normalizeThai(w.text) === normalizeThai(input)) return false;
+        return getRhymeKey(w.text) === targetKey;
       });
 
       document.getElementById('rhyme-target-word').innerText = input;
@@ -454,8 +474,8 @@
         exactGrid.innerHTML = `
           <div class="col-span-full py-12 text-center border border-dashed border-joox-border rounded-xl bg-joox-sidebar/50">
             <i class="fa-solid fa-circle-exclamation text-2xl text-joox-text mb-2"></i>
-            <div class="text-sm text-white font-medium">ไม่พบคำที่มีสัมผัสตรงเป๊ะกับ "${input}" ในคลัง</div>
-            <div class="text-xs text-joox-text mt-1">ลองเพิ่มคำที่มีสระ/ตัวสะกดตรงกันเข้าคลังผ่านเมนู "สกัดคำ" หรือ "เพิ่มคำใหม่"</div>
+            <div class="text-sm text-white font-medium">ไม่พบประโยคที่ลงท้ายด้วยเสียงคล้องจองกับ "${input}" ในคลัง</div>
+            <div class="text-xs text-joox-text mt-1">เพิ่มประโยคหรือวลีลงคลัง แล้วค้นหาใหม่ได้เลย</div>
           </div>`;
       } else {
         exactMatches.forEach(w => exactGrid.appendChild(createWordCard(w)));
@@ -469,26 +489,26 @@
       const text = document.getElementById('extract-input').value;
       if (!text.trim()) return;
 
-      const rawTokens = text.replace(/[^\u0E00-\u0E7Fa-zA-Z0-9\s]/g, ' ')
-                            .split(/\s+/)
-                            .filter(w => w.length > 1);
+      const rawSentences = text
+        .replace(/\r/g, '')
+        .split(/(?<=[.!?。！？…])|\n+/)
+        .map(s => s.replace(/^[\s"“”‘’]+|[\s"“”‘’]+$/g, '').trim())
+        .filter(s => s.length > 0);
 
-      const existingSet = new Set(words.map(w => w.text));
+      const existingSet = new Set(words.map(w => normalizeThai(w.text)));
       const extractedSet = new Set();
-      
-      rawTokens.forEach(t => {
-        if (!existingSet.has(t)) extractedSet.add(t);
+      rawSentences.forEach(sentence => {
+        const key = normalizeThai(sentence);
+        if (key && !existingSet.has(key)) extractedSet.add(sentence);
       });
-
       extractedWordsBuffer = Array.from(extractedSet);
-
       const container = document.getElementById('extract-results-container');
       const tagsContainer = document.getElementById('extract-word-tags');
       document.getElementById('extract-count').innerText = extractedWordsBuffer.length;
       tagsContainer.innerHTML = '';
 
       if (extractedWordsBuffer.length === 0) {
-        tagsContainer.innerHTML = `<span class="text-xs text-joox-text p-2">ไม่พบคำใหม่</span>`;
+        tagsContainer.innerHTML = `<span class="text-xs text-joox-text p-2">ไม่พบประโยคใหม่</span>`;
       } else {
         extractedWordsBuffer.forEach(word => {
           const tag = document.createElement('span');
@@ -517,7 +537,7 @@
           syllables: estimateSyllables(wordText),
           pos: 'ทั่วไป',
           mood: '',
-          note: 'สกัดจากบทความ'
+          note: 'ประโยคจากบทความ'
         });
       });
 
