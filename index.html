@@ -204,7 +204,7 @@
           <h2 class="text-lg font-bold text-white mb-1 flex items-center gap-2">
             <i class="fa-solid fa-music text-joox-green"></i> ค้นหาคำคล้องจอง (Exact Rhyme Finder)
           </h2>
-          <p class="text-xs text-joox-text mb-4">พิมพ์คำเดียว ระบบจะดูคำท้ายประโยค แล้วแสดงทุกประโยคที่ลงท้ายด้วยเสียงคล้องจองกัน เช่น ใจ / ไหม / ใคร / ไหว</p>
+          <p class="text-xs text-joox-text mb-4">พิมพ์คำเดียว ระบบจะดูคำท้ายประโยค แล้วแสดงประโยคที่มีเสียงสระ ตัวสะกด และวรรณยุกต์ท้ายตรงกันเท่านั้น</p>
           
           <div class="flex gap-3 max-w-md">
             <input type="text" id="rhyme-input" onkeypress="if(event.key==='Enter') searchRhyme()" placeholder="พิมพ์คำ เช่น ใจ, ทำไม, ใคร, ไหวไหม..." class="flex-1 bg-joox-sidebar border border-joox-border rounded-lg px-4 py-2.5 text-sm text-white focus:outline-none focus:border-joox-green">
@@ -406,7 +406,7 @@
     function getRhymeKey(text) {
       const word = lastWordOf(text)
         .replace(/[^\u0E00-\u0E7F]/g, '')
-        .replace(/[่-๋์]/g, '');
+        .replace(/์/g, '');
       if (!word) return '';
 
       // ใช้เครื่องหมายสระตัวท้ายของคำ เพื่อไม่ให้สระจากพยางค์ก่อนหน้าปน
@@ -472,8 +472,31 @@
       else if (last === 'ว') coda = 'W';
       if (codaOverride) coda = codaOverride;
 
-      // ไม่แสดงคำที่ระบบระบุเสียงไม่ได้ เพื่อหลีกเลี่ยงผลคล้องจองแบบเดา
-      return vowel === 'UNKNOWN' ? '' : `${vowel}_${coda}`;
+      // หาอักษรต้นของพยางค์ท้าย เพื่อคำนวณวรรณยุกต์ตามอักษรสามหมู่
+      const onsetIndex = mark && /[เแโใไ]/.test(mark[0])
+        ? [...word.matchAll(/[ก-ฮ]/g)].find(m => m.index > mark.index)?.index
+        : [...word.matchAll(/[ก-ฮ]/g)].filter(m => mark && m.index < mark.index).at(-1)?.index;
+      if (onsetIndex === undefined) return '';
+      const onsetChar = word[onsetIndex];
+      const midClass = /[กจฎฏดตบปอ]/.test(onsetChar);
+      const highClass = /[ขฃฉฐถผฝศษสห]/.test(onsetChar);
+      const consonantClass = midClass ? 'MID' : highClass ? 'HIGH' : 'LOW';
+      const toneMark = word.slice(onsetIndex).match(/[่้๊๋]/)?.[0] || '';
+      const isShort = /SHORT/.test(vowel) || vowel === 'AI';
+      const isLive = /^(OPEN|N|M|NG|Y|W)$/.test(coda) || (!isShort && coda === 'OPEN');
+
+      let tone;
+      if (toneMark === '่') tone = consonantClass === 'LOW' ? 'FALLING' : 'LOW';
+      else if (toneMark === '้') tone = consonantClass === 'LOW' ? 'HIGH' : 'FALLING';
+      else if (toneMark === '๊') tone = 'HIGH';
+      else if (toneMark === '๋') tone = 'RISING';
+      else if (consonantClass === 'MID') tone = 'MID';
+      else if (consonantClass === 'HIGH') tone = isLive ? 'RISING' : 'LOW';
+      else if (isLive) tone = 'MID';
+      else tone = isShort ? 'HIGH' : 'FALLING';
+
+      // เทียบสระ ตัวสะกด และวรรณยุกต์ครบ จึงไม่ดึงคำที่เพียงแค่มีเสียงสระใกล้กัน
+      return vowel === 'UNKNOWN' ? '' : `${vowel}_${coda}_${tone}`;
     }
 
     function searchRhyme() {
