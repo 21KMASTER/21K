@@ -176,20 +176,23 @@
           <h2 class="text-lg font-bold text-white mb-1 flex items-center gap-2">
             <i class="fa-solid fa-wand-magic-sparkles text-joox-green"></i> สกัดข้อความ
           </h2>
-          <p class="text-xs text-joox-text mb-4">ระบบจะแยกคำตามช่องว่าง คัดคำซ้ำ และลองจัดประเภทกับอารมณ์จากชุดคำภาษาไทยในเครื่อง รายการที่ไม่แน่ใจจะเป็น “ทั่วไป / ไม่ระบุ” และแก้ไขภายหลังได้</p>
+          <p class="text-xs text-joox-text mb-4">เลือกแยกคำตามช่องว่าง หรือเก็บแต่ละบรรทัดเป็นวลีเต็ม เพื่อให้ผลค้นหาคำคล้องจองแสดงข้อความหลายพยางค์ได้ คัดรายการซ้ำและลองจัดประเภท/อารมณ์แบบออฟไลน์</p>
           
           <textarea id="extract-input" rows="7" placeholder="วางบทความ นิยาย หรือเนื้อเพลงที่นี่..." class="w-full bg-joox-sidebar border border-joox-border rounded-lg p-4 text-sm text-white focus:outline-none focus:border-joox-green mb-4 resize-y placeholder-joox-text/50"></textarea>
           
-          <div class="flex justify-end">
-            <button onclick="processExtraction()" class="bg-joox-green hover:bg-joox-darkGreen text-joox-black font-semibold px-6 py-2.5 rounded-lg text-sm transition flex items-center gap-2 neon-glow">
+          <div class="flex justify-end gap-2 flex-wrap">
+            <button onclick="processExtraction('words')" class="bg-joox-green hover:bg-joox-darkGreen text-joox-black font-semibold px-5 py-2.5 rounded-lg text-sm transition flex items-center gap-2 neon-glow">
               <i class="fa-solid fa-gears"></i> แยกคำตามช่องว่าง
+            </button>
+            <button onclick="processExtraction('phrases')" class="border border-joox-green/50 hover:bg-joox-hover text-joox-green font-semibold px-5 py-2.5 rounded-lg text-sm transition flex items-center gap-2">
+              <i class="fa-solid fa-align-left"></i> เก็บแต่ละบรรทัดเป็นวลี
             </button>
           </div>
         </div>
 
         <div id="extract-results-container" class="hidden bg-joox-card p-6 rounded-xl border border-joox-border">
           <div class="flex items-center justify-between mb-4">
-            <h3 class="font-bold text-white text-md">คำที่พบ (<span id="extract-count" class="text-joox-green">0</span> คำ)</h3>
+            <h3 class="font-bold text-white text-md"><span id="extract-kind-label">คำ</span>ที่พบ (<span id="extract-count" class="text-joox-green">0</span> <span id="extract-kind-unit">คำ</span>)</h3>
             <button onclick="saveExtractedWords()" class="bg-joox-green hover:bg-joox-darkGreen text-joox-black font-semibold px-4 py-2 rounded-lg text-xs transition flex items-center gap-2">
               <i class="fa-solid fa-floppy-disk"></i> บันทึกคำทั้งหมดลงคลัง
             </button>
@@ -309,6 +312,7 @@
     ];
 
     let extractedWordsBuffer = [];
+    let extractedAsPhrases = false;
 
     document.addEventListener('DOMContentLoaded', () => {
       saveAndRefresh();
@@ -365,7 +369,7 @@
       card.innerHTML = `
         <div>
           <div class="flex items-start justify-between gap-2 mb-2">
-            <h4 class="font-bold text-white text-lg group-hover:text-joox-green transition">${word.text}</h4>
+            <h4 class="font-bold text-white text-lg group-hover:text-joox-green transition min-w-0 break-words whitespace-pre-wrap">${word.text}</h4>
             <span class="text-[10px] px-2 py-0.5 rounded-full bg-joox-sidebar text-joox-green border border-joox-border">${word.syllables} พยางค์</span>
           </div>
           ${word.note ? `<p class="text-xs text-joox-text mb-3 line-clamp-2">${word.note}</p>` : ''}
@@ -403,13 +407,16 @@
       return parts.length ? parts[parts.length - 1] : '';
     }
 
-    function getRhymeKey(text) {
+    function getSingleWordRhymeKey(text) {
       const rawWord = lastWordOf(text).replace(/[.,!?;:()[\]{}"“”‘’…—–-]+$/g, '');
       const englishWord = rawWord.toLowerCase();
       // คำอังกฤษใช้รูปสะกดท้ายคำเป็นตัวช่วยออกเสียงแบบประมาณ; ไม่มีวรรณยุกต์ จึงใช้ ANY
       if (/^[a-z]+$/.test(englishWord)) {
         if (/(?:no|go|so|show|flow|know|low|though|toe|snow|grow|pro|yo|mo|o)$/.test(englishWord)) return 'O_LONG_OPEN_ANY';
-        if (/(?:[bcdfghjklmnpqrstvwxyz]y|ie|ee|ey)$/.test(englishWord)) return 'I_LONG_OPEN_ANY';
+        if (/(?:my|by|try|sky|fly|cry|dry|why|shy|spy|sly|guy|buy)$/.test(englishWord)) return 'AI_LONG_OPEN_ANY';
+        // -y / -ie ท้ายคำหลายพยางค์ เช่น Lady / Movie มักเป็น /i/ สั้น ไม่ใช่ /iː/ ยาว
+        if (/(?:[bcdfghjklmnpqrstvwxyz]y|ie)$/.test(englishWord)) return 'I_SHORT_OPEN_ANY';
+        if (/(?:ee|ey)$/.test(englishWord)) return 'I_LONG_OPEN_ANY';
       }
       const silentFinalT = /ษฐ์$/.test(rawWord);
       const word = rawWord.replace(/[^\u0E00-\u0E7F]/g, '').replace(/์/g, '');
@@ -539,7 +546,9 @@
       let onsetChar = word[onsetIndex];
       if (onsetChar !== 'ห') {
         const prior = consonants.filter(m => m.index < onsetIndex).at(-1);
-        if (prior?.[0] === 'ห' && /[งญณนมยรลว]/.test(onsetChar)) onsetChar = 'ห';
+        const priorHHasPreposedVowel = prior?.[0] === 'ห' && prior.index > 0 && /[เแโใไ]/.test(word[prior.index - 1]);
+        const priorHBelongsToPreviousSyllable = priorHHasPreposedVowel && mark.index > onsetIndex;
+        if (prior?.[0] === 'ห' && /[งญณนมยรลว]/.test(onsetChar) && !priorHBelongsToPreviousSyllable) onsetChar = 'ห';
         // อ นำ ย (อย่า, อยู่, อย่าง, อยาก) ใช้ชั้นอักษรกลางกำหนดเสียงวรรณยุกต์
         if (prior?.[0] === 'อ' && onsetChar === 'ย' && onsetIndex - prior.index === 1) onsetChar = 'อ';
         // สว ในคำอย่าง สว่าง มี ส เป็นอักษรนำกำหนดเสียงของ ว
@@ -567,6 +576,24 @@
       else tone = isShort ? 'HIGH' : 'FALLING';
 
       return `${vowel}_${coda}_${tone}`;
+    }
+
+    function getRhymeKey(text) {
+      const finalPart = lastWordOf(text);
+      const directKey = getSingleWordRhymeKey(finalPart);
+      if (directKey) return directKey;
+
+      // ในภาษาไทยวลีมักเขียนติดกัน; ถ้าพยางค์ท้ายเป็นสระโอะลดรูปแบบ คน/จน/ทน/ปน/พล
+      // ให้ลองอ่านพยัญชนะท้ายคู่สุดท้าย โดยไม่ตัดคำที่มีสระนำอย่าง โลก ออก
+      const compact = finalPart.replace(/\s+/g, '').replace(/[ๆฯ.,!?;:()[\]{}"“”‘’…—–\-]/g, '');
+      if (/[ก-ฮ]{2}$/.test(compact)) {
+        const preceding = compact.slice(0, -2);
+        if (!/[เแโใไ]$/.test(preceding)) {
+          const implicitEnding = getSingleWordRhymeKey(compact.slice(-2));
+          if (implicitEnding.startsWith('O_SHORT_')) return implicitEnding;
+        }
+      }
+      return '';
     }
 
     function rhymeKeysMatch(left, right) {
@@ -624,26 +651,30 @@
     }
 
     // --- EXTRACTION LOGIC ---
-    function processExtraction() {
+    function processExtraction(mode = 'words') {
       const text = document.getElementById('extract-input').value;
       if (!text.trim()) return;
 
-      // ทุกช่วงที่คั่นด้วยช่องว่าง/ขึ้นบรรทัดใหม่จะเป็น 1 รายการแยกกัน
-      const rawWords = text
-        .split(/\s+/)
-        .map(token => token.replace(/^["“”‘’.,!?;:()[\]{}…—–-]+|["“”‘’.,!?;:()[\]{}…—–-]+$/g, '').trim())
-        .filter(Boolean);
+      extractedAsPhrases = mode === 'phrases';
+      // โหมดคำคงพฤติกรรมเดิม; โหมดวลีรักษาข้อความทั้งบรรทัดไว้เป็นรายการเดียว
+      const rawItems = extractedAsPhrases
+        ? text.split(/\r?\n+/).map(line => line.trim()).filter(Boolean)
+        : text.split(/\s+/)
+          .map(token => token.replace(/^["“”‘’.,!?;:()[\]{}…—–-]+|["“”‘’.,!?;:()[\]{}…—–-]+$/g, '').trim())
+          .filter(Boolean);
 
       const existingSet = new Set(words.map(w => normalizeThai(w.text)));
       const extractedSet = new Set();
-      rawWords.forEach(word => {
-        const key = normalizeThai(word);
-        if (key && !existingSet.has(key)) extractedSet.add(word);
+      rawItems.forEach(item => {
+        const key = normalizeThai(item);
+        if (key && !existingSet.has(key)) extractedSet.add(item);
       });
       extractedWordsBuffer = Array.from(extractedSet);
       const container = document.getElementById('extract-results-container');
       const tagsContainer = document.getElementById('extract-word-tags');
       document.getElementById('extract-count').innerText = extractedWordsBuffer.length;
+      document.getElementById('extract-kind-label').innerText = extractedAsPhrases ? 'วลี' : 'คำ';
+      document.getElementById('extract-kind-unit').innerText = extractedAsPhrases ? 'วลี' : 'คำ';
       tagsContainer.innerHTML = '';
 
       if (extractedWordsBuffer.length === 0) {
@@ -717,7 +748,7 @@
           syllables: estimateSyllables(wordText),
           pos: classification.pos,
           mood: classification.mood,
-          note: 'สกัดจากข้อความ'
+          note: extractedAsPhrases ? 'บันทึกเป็นวลีจากข้อความ' : 'สกัดจากข้อความ'
         });
       });
 
