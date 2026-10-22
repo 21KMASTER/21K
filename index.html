@@ -109,7 +109,7 @@
       <div class="flex items-center gap-4 w-full max-w-xl">
         <div class="relative w-full">
           <i class="fa-solid fa-magnifying-glass absolute left-3 top-1/2 -translate-y-1/2 text-joox-text"></i>
-          <input type="text" id="global-search" oninput="renderVault()" placeholder="ค้นหาคำศัพท์..." class="w-full bg-joox-card border border-joox-border rounded-full py-2 pl-9 pr-4 text-sm focus:outline-none focus:border-joox-green text-white placeholder-joox-text transition">
+          <input type="text" id="global-search" oninput="queueVaultSearch()" placeholder="ค้นหาคำศัพท์..." class="w-full bg-joox-card border border-joox-border rounded-full py-2 pl-9 pr-4 text-sm focus:outline-none focus:border-joox-green text-white placeholder-joox-text transition">
         </div>
       </div>
       <button onclick="openAddWordModal()" class="ml-4 bg-joox-green hover:bg-joox-darkGreen text-joox-black px-4 py-2 rounded-full font-semibold text-sm transition flex items-center gap-2 shrink-0 neon-glow">
@@ -324,6 +324,10 @@
     }
     let words = loadLocalWords() || defaultWords;
     let vaultDatabase = null;
+    const PAGE_SIZE = 100;
+    let visibleVaultLimit = PAGE_SIZE;
+    let currentVaultResults = [];
+    let vaultSearchTimer = null;
 
     let extractedWordsBuffer = [];
     let extractedAsPhrases = false;
@@ -382,11 +386,14 @@
           vaultDatabase = null;
         }
       }
-      try {
-        localStorage.setItem('goldhair_words', JSON.stringify(words));
-        persisted = true;
-      } catch (_) {
-        // IndexedDB ยังบันทึกคลังหลักได้ แม้ Local Storage เต็ม
+      // เมื่อมี IndexedDB แล้ว ไม่ต้องแปลงและเขียนคลังทั้งก้อนลง Local Storage ทุกครั้ง
+      if (!vaultDatabase) {
+        try {
+          localStorage.setItem('goldhair_words', JSON.stringify(words));
+          persisted = true;
+        } catch (_) {
+          // ไม่มีที่เก็บสำรอง ให้แจ้งด้านล่าง
+        }
       }
       document.getElementById('stat-total-words').innerText = `${words.length} คำ`;
       renderVault();
@@ -411,7 +418,13 @@
       activeNav.classList.remove('text-joox-text');
     }
 
-    function renderVault() {
+    function queueVaultSearch() {
+      clearTimeout(vaultSearchTimer);
+      vaultSearchTimer = setTimeout(() => renderVault(), 120);
+    }
+
+    function renderVault(loadMore = false) {
+      if (!loadMore) visibleVaultLimit = PAGE_SIZE;
       const search = document.getElementById('global-search').value.toLowerCase();
       const sylFilter = document.getElementById('filter-syllables').value;
       const posFilter = document.getElementById('filter-pos').value;
@@ -427,13 +440,24 @@
 
       const grid = document.getElementById('words-grid');
       grid.innerHTML = '';
+      currentVaultResults = filtered;
 
       if (filtered.length === 0) {
         grid.innerHTML = `<div class="col-span-full py-12 text-center text-joox-text text-sm">ไม่พบคำหรือประโยคที่ค้นหา</div>`;
         return;
       }
 
-      filtered.forEach(w => grid.appendChild(createWordCard(w)));
+      const end = Math.min(visibleVaultLimit, filtered.length);
+      const fragment = document.createDocumentFragment();
+      for (let i = 0; i < end; i++) fragment.appendChild(createWordCard(filtered[i]));
+      grid.appendChild(fragment);
+      if (filtered.length > end) {
+        const more = document.createElement('button');
+        more.className = 'col-span-full py-3 rounded-lg border border-joox-border text-sm text-joox-green hover:bg-joox-hover';
+        more.textContent = `โหลดเพิ่ม (${end} / ${filtered.length})`;
+        more.onclick = () => { visibleVaultLimit += PAGE_SIZE; renderVault(true); };
+        grid.appendChild(more);
+      }
     }
 
     function createWordCard(word) {
@@ -726,7 +750,25 @@
             <div class="text-xs text-joox-text mt-1">เพิ่มประโยคหรือวลีลงคลัง แล้วค้นหาใหม่ได้เลย</div>
           </div>`;
       } else {
-        exactMatches.forEach(w => exactGrid.appendChild(createWordCard(w)));
+        const fragment = document.createDocumentFragment();
+        exactMatches.slice(0, PAGE_SIZE).forEach(w => fragment.appendChild(createWordCard(w)));
+        exactGrid.appendChild(fragment);
+        if (exactMatches.length > PAGE_SIZE) {
+          let rhymeVisibleLimit = PAGE_SIZE;
+          const more = document.createElement('button');
+          more.className = 'col-span-full py-3 rounded-lg border border-joox-border text-sm text-joox-green hover:bg-joox-hover';
+          more.textContent = `โหลดเพิ่ม (${PAGE_SIZE} / ${exactMatches.length})`;
+          more.onclick = () => {
+            const oldEnd = rhymeVisibleLimit;
+            rhymeVisibleLimit = Math.min(rhymeVisibleLimit + PAGE_SIZE, exactMatches.length);
+            const next = document.createDocumentFragment();
+            exactMatches.slice(oldEnd, rhymeVisibleLimit).forEach(w => next.appendChild(createWordCard(w)));
+            exactGrid.insertBefore(next, more);
+            if (rhymeVisibleLimit >= exactMatches.length) more.remove();
+            else more.textContent = `โหลดเพิ่ม (${rhymeVisibleLimit} / ${exactMatches.length})`;
+          };
+          exactGrid.appendChild(more);
+        }
       }
 
       document.getElementById('rhyme-results-container').classList.remove('hidden');
