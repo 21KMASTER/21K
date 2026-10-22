@@ -407,29 +407,31 @@
       const word = lastWordOf(text).replace(/[^\u0E00-\u0E7F]/g, '').replace(/[่-๋็์]/g, '');
       if (!word) return '';
 
-      // เสียงไอรวม ใ-, ไ-, -าย เช่น ใจ/ไหม/ใคร/ไหว/สาย
-      // สระประสมและสระเกินต้องตรวจสอบก่อนสระเดี่ยว
+      // ดูสระของพยางค์ท้าย ไม่ใช้สระที่อยู่ก่อนหน้าในคำหลายพยางค์
+      // เช่น ลำบาก ต้องอ่านพยางค์ท้ายว่า บาก ไม่ใช่ อำ
       let vowel = '';
-      if (/[ใไ]/.test(word) || /าย$/.test(word)) vowel = 'AI';
-      else if (/เ/.test(word) && /า/.test(word)) vowel = 'AO';
-      else if (/เ/.test(word) && /ี/.test(word) && /ว$/.test(word)) vowel = 'IAO';
-      else if (/เ/.test(word) && /ี/.test(word)) vowel = 'IA';
-      else if (/เ/.test(word) && /ื/.test(word)) vowel = 'UEA';
-      else if (/ั/.test(word) && /ว$/.test(word)) vowel = 'UA';
-      else if (/อัว/.test(word)) vowel = 'UA';
-      else if (/ำ/.test(word) || /าม$/.test(word)) vowel = 'AM';
-      else if (/โ/.test(word)) vowel = 'O_LONG';
-      else if (/แ/.test(word)) vowel = /็/.test(word) ? 'AE_SHORT' : 'AE_LONG';
-      else if (/เ/.test(word)) vowel = /็|แ/.test(word) ? 'E_SHORT' : (/อ/.test(word) ? 'OE' : 'E_LONG');
-      else if (/ั/.test(word) || /ะ/.test(word)) vowel = /ั/.test(word) ? 'A_SHORT' : 'A_SHORT';
-      else if (/ิ/.test(word)) vowel = 'I_SHORT';
-      else if (/ี/.test(word)) vowel = 'I_LONG';
-      else if (/ึ/.test(word)) vowel = 'UE_SHORT';
-      else if (/ื/.test(word)) vowel = 'UE_LONG';
-      else if (/ุ/.test(word)) vowel = 'U_SHORT';
-      else if (/ู/.test(word)) vowel = 'U_LONG';
-      else if (/อ/.test(word)) vowel = 'OR_LONG';
-      else if (/า/.test(word)) vowel = 'AA_LONG';
+      const vowelMarks = [...word.matchAll(/[ะัาำิีึืุูเแโใไ]/g)];
+      const lastMark = vowelMarks.length ? vowelMarks[vowelMarks.length - 1] : null;
+      const tail = lastMark ? word.slice(Math.max(0, lastMark.index - 3)) : word;
+      if (/[ใไ]/.test(tail) || /าย$/.test(word)) vowel = 'AI';
+      else if (/ำ$/.test(word) || /าม$/.test(word)) vowel = 'AM';
+      else if (/เ/.test(tail) && /ี/.test(tail) && /ว$/.test(word)) vowel = 'IAO';
+      else if (/เ/.test(tail) && /ี/.test(tail)) vowel = 'IA';
+      else if (/เ/.test(tail) && /ื/.test(tail)) vowel = 'UEA';
+      else if (/ั/.test(tail) && /ว$/.test(word)) vowel = 'UA';
+      else if (/เ/.test(tail) && /า/.test(tail)) vowel = 'AO';
+      else if (/โ/.test(tail)) vowel = 'O_LONG';
+      else if (/แ/.test(tail)) vowel = /็/.test(word) ? 'AE_SHORT' : 'AE_LONG';
+      else if (/เ/.test(tail)) vowel = /็/.test(word) ? 'E_SHORT' : 'E_LONG';
+      else if (/[ัะ]/.test(tail)) vowel = 'A_SHORT';
+      else if (/ิ/.test(tail)) vowel = 'I_SHORT';
+      else if (/ี/.test(tail)) vowel = 'I_LONG';
+      else if (/ึ/.test(tail)) vowel = 'UE_SHORT';
+      else if (/ื/.test(tail)) vowel = 'UE_LONG';
+      else if (/ุ/.test(tail)) vowel = 'U_SHORT';
+      else if (/ู/.test(tail)) vowel = 'U_LONG';
+      else if (/อ/.test(tail)) vowel = 'OR_LONG';
+      else if (/า/.test(tail)) vowel = 'AA_LONG';
       else vowel = 'UNKNOWN';
 
       // ตัวสะกดไทยหลายรูปออกเสียงท้ายเหมือนกัน (แม่กก กด กบ กน กม เกย เกอว)
