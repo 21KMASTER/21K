@@ -544,6 +544,8 @@
         if (prior?.[0] === 'อ' && onsetChar === 'ย' && onsetIndex - prior.index === 1) onsetChar = 'อ';
         // สว ในคำอย่าง สว่าง มี ส เป็นอักษรนำกำหนดเสียงของ ว
         if (prior?.[0] === 'ส' && onsetChar === 'ว' && onsetIndex - prior.index === 1) onsetChar = 'ส';
+        // สร ในคำอย่าง สร้าง มี ส เป็นอักษรต้นกำหนดเสียงวรรณยุกต์
+        if (prior?.[0] === 'ส' && onsetChar === 'ร' && onsetIndex - prior.index === 1) onsetChar = 'ส';
         const validClusters = { ก: 'รลว', ข: 'รลว', ค: 'รลว', ป: 'รล', พ: 'รล', ต: 'ร' };
         if (onsetChar !== 'ห' && prior && onsetIndex - prior.index === 1 && validClusters[prior[0]]?.includes(onsetChar)) onsetChar = prior[0];
       }
