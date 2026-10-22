@@ -174,24 +174,24 @@
       <section id="tab-extract" class="hidden space-y-6">
         <div class="bg-joox-card p-6 rounded-xl border border-joox-border">
           <h2 class="text-lg font-bold text-white mb-1 flex items-center gap-2">
-            <i class="fa-solid fa-wand-magic-sparkles text-joox-green"></i> สกัดคำจากบทความ หรือ นิยาย
+            <i class="fa-solid fa-wand-magic-sparkles text-joox-green"></i> สกัดข้อความ
           </h2>
-          <p class="text-xs text-joox-text mb-4">วางเนื้อหาลงในช่องด้านล่าง ระบบจะแยกเป็นประโยค คัดประโยคซ้ำ และเลือกบันทึกลงคลัง</p>
+          <p class="text-xs text-joox-text mb-4">วางหรือพิมพ์ข้อความได้เลย ระบบจะแยกทุกช่วงที่คั่นด้วยช่องว่างเป็นคนละคำ คัดคำซ้ำ แล้วให้เลือกบันทึกลงคลัง</p>
           
           <textarea id="extract-input" rows="7" placeholder="วางบทความ นิยาย หรือเนื้อเพลงที่นี่..." class="w-full bg-joox-sidebar border border-joox-border rounded-lg p-4 text-sm text-white focus:outline-none focus:border-joox-green mb-4 resize-y placeholder-joox-text/50"></textarea>
           
           <div class="flex justify-end">
             <button onclick="processExtraction()" class="bg-joox-green hover:bg-joox-darkGreen text-joox-black font-semibold px-6 py-2.5 rounded-lg text-sm transition flex items-center gap-2 neon-glow">
-              <i class="fa-solid fa-gears"></i> แยกประโยค
+              <i class="fa-solid fa-gears"></i> แยกคำตามช่องว่าง
             </button>
           </div>
         </div>
 
         <div id="extract-results-container" class="hidden bg-joox-card p-6 rounded-xl border border-joox-border">
           <div class="flex items-center justify-between mb-4">
-            <h3 class="font-bold text-white text-md">ประโยคที่พบ (<span id="extract-count" class="text-joox-green">0</span> คำ)</h3>
+            <h3 class="font-bold text-white text-md">คำที่พบ (<span id="extract-count" class="text-joox-green">0</span> คำ)</h3>
             <button onclick="saveExtractedWords()" class="bg-joox-green hover:bg-joox-darkGreen text-joox-black font-semibold px-4 py-2 rounded-lg text-xs transition flex items-center gap-2">
-              <i class="fa-solid fa-floppy-disk"></i> บันทึกประโยคทั้งหมดลงคลัง
+              <i class="fa-solid fa-floppy-disk"></i> บันทึกคำทั้งหมดลงคลัง
             </button>
           </div>
           <div id="extract-word-tags" class="flex flex-wrap gap-2 max-h-96 overflow-y-auto p-2 bg-joox-sidebar rounded-lg border border-joox-border"></div>
@@ -543,17 +543,17 @@
       const text = document.getElementById('extract-input').value;
       if (!text.trim()) return;
 
-      const rawSentences = text
-        .replace(/\r/g, '')
-        .split(/(?<=[.!?。！？…])|\n+/)
-        .map(s => s.replace(/^[\s"“”‘’]+|[\s"“”‘’]+$/g, '').trim())
-        .filter(s => s.length > 0);
+      // ทุกช่วงที่คั่นด้วยช่องว่าง/ขึ้นบรรทัดใหม่จะเป็น 1 รายการแยกกัน
+      const rawWords = text
+        .split(/\s+/)
+        .map(token => token.replace(/^["“”‘’.,!?;:()[\]{}…—–-]+|["“”‘’.,!?;:()[\]{}…—–-]+$/g, '').trim())
+        .filter(Boolean);
 
       const existingSet = new Set(words.map(w => normalizeThai(w.text)));
       const extractedSet = new Set();
-      rawSentences.forEach(sentence => {
-        const key = normalizeThai(sentence);
-        if (key && !existingSet.has(key)) extractedSet.add(sentence);
+      rawWords.forEach(word => {
+        const key = normalizeThai(word);
+        if (key && !existingSet.has(key)) extractedSet.add(word);
       });
       extractedWordsBuffer = Array.from(extractedSet);
       const container = document.getElementById('extract-results-container');
@@ -562,12 +562,19 @@
       tagsContainer.innerHTML = '';
 
       if (extractedWordsBuffer.length === 0) {
-        tagsContainer.innerHTML = `<span class="text-xs text-joox-text p-2">ไม่พบประโยคใหม่</span>`;
+        tagsContainer.innerHTML = `<span class="text-xs text-joox-text p-2">ไม่พบคำใหม่</span>`;
       } else {
         extractedWordsBuffer.forEach(word => {
           const tag = document.createElement('span');
           tag.className = 'px-3 py-1.5 rounded-lg bg-joox-card text-xs text-white border border-joox-border flex items-center gap-2';
-          tag.innerHTML = `${word} <i onclick="removeExtractedTag('${word}', this)" class="fa-solid fa-xmark text-joox-text hover:text-red-400 cursor-pointer text-xs"></i>`;
+          const label = document.createElement('span');
+          label.textContent = word;
+          const remove = document.createElement('button');
+          remove.type = 'button';
+          remove.className = 'text-joox-text hover:text-red-400 cursor-pointer text-xs';
+          remove.innerHTML = '<i class="fa-solid fa-xmark"></i>';
+          remove.addEventListener('click', () => removeExtractedTag(word, remove));
+          tag.append(label, remove);
           tagsContainer.appendChild(tag);
         });
       }
@@ -591,7 +598,7 @@
           syllables: estimateSyllables(wordText),
           pos: 'ทั่วไป',
           mood: '',
-          note: 'ประโยคจากบทความ'
+          note: 'สกัดจากข้อความ'
         });
       });
 
