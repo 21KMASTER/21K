@@ -404,39 +404,62 @@
     }
 
     function getRhymeKey(text) {
-      const word = lastWordOf(text).replace(/[^\u0E00-\u0E7F]/g, '').replace(/[่-๋็์]/g, '');
+      const word = lastWordOf(text)
+        .replace(/[^\u0E00-\u0E7F]/g, '')
+        .replace(/[่-๋์]/g, '');
       if (!word) return '';
 
-      // ดูสระของพยางค์ท้าย ไม่ใช้สระที่อยู่ก่อนหน้าในคำหลายพยางค์
-      // เช่น ลำบาก ต้องอ่านพยางค์ท้ายว่า บาก ไม่ใช่ อำ
-      let vowel = '';
-      const vowelMarks = [...word.matchAll(/[ะัาำิีึืุูเแโใไ]/g)];
-      const lastMark = vowelMarks.length ? vowelMarks[vowelMarks.length - 1] : null;
-      const tail = lastMark ? word.slice(Math.max(0, lastMark.index - 3)) : word;
-      if (/[ใไ]/.test(tail) || /าย$/.test(word)) vowel = 'AI';
-      else if (/ำ$/.test(word) || /าม$/.test(word)) vowel = 'AM';
-      else if (/เ/.test(tail) && /ี/.test(tail) && /ว$/.test(word)) vowel = 'IAO';
-      else if (/เ/.test(tail) && /ี/.test(tail)) vowel = 'IA';
-      else if (/เ/.test(tail) && /ื/.test(tail)) vowel = 'UEA';
-      else if (/ั/.test(tail) && /ว$/.test(word)) vowel = 'UA';
-      else if (/เ/.test(tail) && /า/.test(tail)) vowel = 'AO';
-      else if (/โ/.test(tail)) vowel = 'O_LONG';
-      else if (/แ/.test(tail)) vowel = /็/.test(word) ? 'AE_SHORT' : 'AE_LONG';
-      else if (/เ/.test(tail)) vowel = /็/.test(word) ? 'E_SHORT' : 'E_LONG';
-      else if (/[ัะ]/.test(tail)) vowel = 'A_SHORT';
-      else if (/ิ/.test(tail)) vowel = 'I_SHORT';
-      else if (/ี/.test(tail)) vowel = 'I_LONG';
-      else if (/ึ/.test(tail)) vowel = 'UE_SHORT';
-      else if (/ื/.test(tail)) vowel = 'UE_LONG';
-      else if (/ุ/.test(tail)) vowel = 'U_SHORT';
-      else if (/ู/.test(tail)) vowel = 'U_LONG';
-      else if (/อ/.test(tail)) vowel = 'OR_LONG';
-      else if (/า/.test(tail)) vowel = 'AA_LONG';
-      else vowel = 'UNKNOWN';
+      // ใช้เครื่องหมายสระตัวท้ายของคำ เพื่อไม่ให้สระจากพยางค์ก่อนหน้าปน
+      const marks = [...word.matchAll(/[ะัาำิีึืุูเแโใไ]/g)];
+      const mark = marks.length ? marks[marks.length - 1] : null;
+      const tail = mark ? word.slice(Math.max(0, mark.index - 3)) : word;
+      const onset = '[ก-ฮ][รลว]?';
+      let vowel = 'UNKNOWN';
+      let codaOverride = '';
 
-      // ตัวสะกดไทยหลายรูปออกเสียงท้ายเหมือนกัน (แม่กก กด กบ กน กม เกย เกอว)
-      // แยกเสียงท้ายเพื่อไม่ให้สระเดียวกันแต่ตัวสะกดคนละเสียงถูกรวมผิดกลุ่ม
-      const last = word.slice(-1);
+      if (mark && /[ใไ]/.test(mark[0])) {
+        vowel = 'AI'; codaOverride = 'OPEN';
+      } else if (/าย$/.test(word)) {
+        vowel = 'AI'; codaOverride = 'OPEN';
+      } else if (/ำ$/.test(word)) {
+        vowel = 'AM'; codaOverride = 'M';
+      } else if (mark && mark[0] === 'ี' && new RegExp(`เ${onset}ี`).test(tail)) {
+        vowel = /ว$/.test(word) ? 'IAO' : 'IA';
+        if (vowel === 'IAO') codaOverride = 'OPEN';
+      } else if (mark && mark[0] === 'ื' && new RegExp(`เ${onset}ื`).test(tail)) {
+        vowel = 'UEA';
+      } else if (mark && mark[0] === 'ั' && /ว$/.test(word)) {
+        vowel = 'UA'; codaOverride = 'OPEN';
+      } else if (mark && mark[0] === 'า' && /าว$/.test(word)) {
+        vowel = 'AO'; codaOverride = 'OPEN';
+      } else if (mark && mark[0] === 'า' && new RegExp(`เ${onset}า$`).test(word)) {
+        vowel = 'AO'; codaOverride = 'OPEN';
+      } else if (mark && mark[0] === 'โ') {
+        vowel = 'O_LONG';
+      } else if (mark && mark[0] === 'แ') {
+        vowel = /็/.test(word) ? 'AE_SHORT' : 'AE_LONG';
+      } else if (mark && mark[0] === 'เ') {
+        vowel = /็/.test(word) ? 'E_SHORT' : 'E_LONG';
+      } else if (mark && /[ัะ]/.test(mark[0])) {
+        vowel = 'A_SHORT';
+      } else if (mark && mark[0] === 'ิ') {
+        vowel = 'I_SHORT';
+      } else if (mark && mark[0] === 'ี') {
+        vowel = 'I_LONG';
+      } else if (mark && mark[0] === 'ึ') {
+        vowel = 'UE_SHORT';
+      } else if (mark && mark[0] === 'ื') {
+        vowel = 'UE_LONG';
+      } else if (mark && mark[0] === 'ุ') {
+        vowel = 'U_SHORT';
+      } else if (mark && mark[0] === 'ู') {
+        vowel = 'U_LONG';
+      } else if (mark && mark[0] === 'า') {
+        vowel = 'AA_LONG';
+      }
+
+      // จัดรูปตัวสะกดตามเสียงท้ายจริง: ก/ข/ค, ด/ต/ถ/ส ฯลฯ
+      const last = word.replace(/[ะัาำิีึืุูเแโใไ็]/g, '').slice(-1);
       let coda = 'OPEN';
       if (/[กขคฆ]/.test(last)) coda = 'K';
       else if (/[ดจชซฎฏฐฑฒตถทธศษส]/.test(last)) coda = 'T';
@@ -446,12 +469,10 @@
       else if (last === 'ง') coda = 'NG';
       else if (last === 'ย') coda = 'Y';
       else if (last === 'ว') coda = 'W';
+      if (codaOverride) coda = codaOverride;
 
-      // ใ/ไ และ -าย มีเสียงท้ายเป็นสระไอ ไม่มีตัวสะกดแยก
-      if (vowel === 'AI') coda = 'OPEN';
-      // สระอำมีเสียง ม ปิดท้าย แม้ไม่มี ม เขียนเป็นตัวสะกด
-      if (vowel === 'AM') coda = 'M';
-      return `${vowel}_${coda}`;
+      // ไม่แสดงคำที่ระบบระบุเสียงไม่ได้ เพื่อหลีกเลี่ยงผลคล้องจองแบบเดา
+      return vowel === 'UNKNOWN' ? '' : `${vowel}_${coda}`;
     }
 
     function searchRhyme() {
@@ -459,6 +480,13 @@
       if (!input) return;
 
       const targetKey = getRhymeKey(input);
+      if (!targetKey) {
+        document.getElementById('rhyme-target-word').innerText = input;
+        document.getElementById('rhyme-count-badge').innerText = '0 คำ';
+        document.getElementById('exact-rhyme-grid').innerHTML = '<div class="col-span-full py-8 text-center text-joox-text text-sm">ยังแยกเสียงท้ายคำนี้ไม่ได้ กรุณาลองพิมพ์คำสุดท้ายที่ต้องการหา</div>';
+        document.getElementById('rhyme-results-container').classList.remove('hidden');
+        return;
+      }
 
       // ค้นจากคำท้ายของแต่ละประโยค/วลีที่เก็บไว้ และไม่แสดงรายการที่เป็นคำค้นเดียวกัน
       const exactMatches = words.filter(w => {
