@@ -207,7 +207,7 @@
           <h2 class="text-lg font-bold text-white mb-1 flex items-center gap-2">
             <i class="fa-solid fa-music text-joox-green"></i> ค้นหาคำคล้องจอง (Exact Rhyme Finder)
           </h2>
-          <p class="text-xs text-joox-text mb-4">พิมพ์คำเดียว ระบบจะเทียบสระ ตัวสะกด และวรรณยุกต์ของพยางค์ท้าย คำอังกฤษใช้รูปสะกดท้ายคำช่วยประเมินเสียงโดยประมาณ</p>
+          <p class="text-xs text-joox-text mb-4">พิมพ์คำเดียว ระบบจะเทียบสระ ตัวสะกด และวรรณยุกต์ของพยางค์ท้าย คำอังกฤษจะไม่ปนในผลแบบเคร่งเสียง เพราะตัวสะกดบอกวรรณยุกต์ไม่ได้</p>
           
           <div class="flex gap-3 max-w-md">
             <input type="text" id="rhyme-input" onkeypress="if(event.key==='Enter') searchRhyme()" placeholder="พิมพ์คำ เช่น ใจ, ทำไม, ใคร, ไหวไหม..." class="flex-1 bg-joox-sidebar border border-joox-border rounded-lg px-4 py-2.5 text-sm text-white focus:outline-none focus:border-joox-green">
@@ -215,6 +215,10 @@
               <i class="fa-solid fa-magnifying-glass"></i> ค้นหา
             </button>
           </div>
+          <label class="mt-3 flex items-center gap-2 text-xs text-joox-text cursor-pointer">
+            <input type="checkbox" id="allow-approx-english" class="accent-joox-green">
+            รวมคำอังกฤษแบบประมาณ (ไม่ตรวจวรรณยุกต์)
+          </label>
         </div>
 
         <div id="rhyme-results-container" class="hidden space-y-4">
@@ -298,7 +302,7 @@
 
   <script>
     // --- INITIAL DATA ---
-    let words = JSON.parse(localStorage.getItem('goldhair_words')) || [
+    const defaultWords = [
       { id: '1', text: 'ดวงดาว', syllables: '2', pos: 'นาม', mood: 'คิดถึง', note: 'ใช้เปรียบเทียบความฝันหรือคนที่อยู่ไกล' },
       { id: '2', text: 'เหงา', syllables: '1', pos: 'คุณศัพท์', mood: 'เหงา', note: 'ความรู้สึกว่างเปล่า' },
       { id: '3', text: 'กอด', syllables: '1', pos: 'กริยา', mood: 'อบอุ่น', note: 'การแสดงความรัก' },
@@ -310,18 +314,87 @@
       { id: '9', text: 'มองตา', syllables: '2', pos: 'กริยา', mood: 'อบอุ่น', note: 'สบตากัน' },
       { id: '10', text: 'น้ำตา', syllables: '2', pos: 'นาม', mood: 'เศร้า', note: 'หยดน้ำตา' }
     ];
+    function loadLocalWords() {
+      try {
+        const stored = JSON.parse(localStorage.getItem('goldhair_words'));
+        return Array.isArray(stored) ? stored : null;
+      } catch (_) {
+        return null;
+      }
+    }
+    let words = loadLocalWords() || defaultWords;
+    let vaultDatabase = null;
 
     let extractedWordsBuffer = [];
     let extractedAsPhrases = false;
 
-    document.addEventListener('DOMContentLoaded', () => {
-      saveAndRefresh();
-    });
+    document.addEventListener('DOMContentLoaded', initializeVault);
 
-    function saveAndRefresh() {
-      localStorage.setItem('goldhair_words', JSON.stringify(words));
+    function openVaultDatabase() {
+      return new Promise((resolve, reject) => {
+        if (!window.indexedDB) return reject(new Error('IndexedDB unavailable'));
+        const request = indexedDB.open('goldhair-vault', 1);
+        request.onupgradeneeded = () => {
+          if (!request.result.objectStoreNames.contains('vault')) request.result.createObjectStore('vault');
+        };
+        request.onsuccess = () => resolve(request.result);
+        request.onerror = () => reject(request.error || new Error('Could not open IndexedDB'));
+      });
+    }
+
+    function readVaultDatabase(db) {
+      return new Promise((resolve, reject) => {
+        const request = db.transaction('vault', 'readonly').objectStore('vault').get('words');
+        request.onsuccess = () => resolve(request.result);
+        request.onerror = () => reject(request.error || new Error('Could not read IndexedDB'));
+      });
+    }
+
+    function writeVaultDatabase(db, data) {
+      return new Promise((resolve, reject) => {
+        const transaction = db.transaction('vault', 'readwrite');
+        transaction.objectStore('vault').put(data, 'words');
+        transaction.oncomplete = () => resolve();
+        transaction.onerror = () => reject(transaction.error || new Error('Could not save IndexedDB'));
+        transaction.onabort = () => reject(transaction.error || new Error('IndexedDB transaction aborted'));
+      });
+    }
+
+    async function initializeVault() {
+      try {
+        vaultDatabase = await openVaultDatabase();
+        const savedWords = await readVaultDatabase(vaultDatabase);
+        if (Array.isArray(savedWords)) words = savedWords;
+        else await writeVaultDatabase(vaultDatabase, words); // ย้ายคลังเดิมจาก Local Storage เข้า IndexedDB ครั้งแรก
+      } catch (_) {
+        vaultDatabase = null; // ใช้ Local Storage ต่อถ้าเบราว์เซอร์ไม่รองรับ IndexedDB
+      }
+      await saveAndRefresh();
+    }
+
+    async function saveAndRefresh() {
+      let persisted = false;
+      if (vaultDatabase) {
+        try {
+          await writeVaultDatabase(vaultDatabase, words);
+          persisted = true;
+        } catch (_) {
+          vaultDatabase = null;
+        }
+      }
+      try {
+        localStorage.setItem('goldhair_words', JSON.stringify(words));
+        persisted = true;
+      } catch (_) {
+        // IndexedDB ยังบันทึกคลังหลักได้ แม้ Local Storage เต็ม
+      }
       document.getElementById('stat-total-words').innerText = `${words.length} คำ`;
       renderVault();
+      if (!persisted) {
+        alert('บันทึกคำไม่สำเร็จ พื้นที่เก็บข้อมูลของเบราว์เซอร์เต็มหรือถูกปิดใช้งาน กรุณาส่งออกข้อมูลสำรองก่อน แล้วเปิด GOLDHAIR ในเบราว์เซอร์โหมดปกติ');
+        return false;
+      }
+      return true;
     }
 
     function switchTab(tab) {
@@ -414,9 +487,13 @@
       if (/^[a-z]+$/.test(englishWord)) {
         if (/(?:no|go|so|show|flow|know|low|though|toe|snow|grow|pro|yo|mo|o)$/.test(englishWord)) return 'O_LONG_OPEN_ANY';
         if (/(?:my|by|try|sky|fly|cry|dry|why|shy|spy|sly|guy|buy)$/.test(englishWord)) return 'AI_LONG_OPEN_ANY';
+        if (/(?:obey|they|grey|prey|hey|whey)$/.test(englishWord)) return 'E_LONG_OPEN_ANY';
+        if (/(?:kidney|money|honey|journey|attorney|monkey|turkey|hockey|jockey)$/.test(englishWord)) return 'I_SHORT_OPEN_ANY';
+        if (englishWord === 'key') return 'I_LONG_OPEN_ANY';
+        if (/ey$/.test(englishWord)) return ''; // เสียง -ey เดาไม่ได้อย่างมั่นใจ
         // -y / -ie ท้ายคำหลายพยางค์ เช่น Lady / Movie มักเป็น /i/ สั้น ไม่ใช่ /iː/ ยาว
         if (/(?:[bcdfghjklmnpqrstvwxyz]y|ie)$/.test(englishWord)) return 'I_SHORT_OPEN_ANY';
-        if (/(?:ee|ey)$/.test(englishWord)) return 'I_LONG_OPEN_ANY';
+        if (/ee$/.test(englishWord)) return 'I_LONG_OPEN_ANY';
       }
       const silentFinalT = /ษฐ์$/.test(rawWord);
       const word = rawWord.replace(/[^\u0E00-\u0E7F]/g, '').replace(/์/g, '');
@@ -596,7 +673,7 @@
       return '';
     }
 
-    function rhymeKeysMatch(left, right) {
+    function rhymeKeysMatch(left, right, allowApproxEnglish = false) {
       if (!left || !right) return false;
       // ชื่อสระบางชุดมีขีดล่าง เช่น AA_LONG; อ่านจากท้ายเพื่อไม่ให้แยกช่องผิด
       const splitKey = key => {
@@ -607,8 +684,12 @@
       };
       const [leftVowel, leftCoda, leftTone] = splitKey(left);
       const [rightVowel, rightCoda, rightTone] = splitKey(right);
-      return leftVowel === rightVowel && leftCoda === rightCoda
-        && (leftTone === rightTone || leftTone === 'ANY' || rightTone === 'ANY');
+      if (leftVowel !== rightVowel || leftCoda !== rightCoda) return false;
+      if (leftTone === 'ANY' || rightTone === 'ANY') {
+        if (leftTone === 'ANY' && rightTone === 'ANY') return true;
+        return allowApproxEnglish;
+      }
+      return leftTone === rightTone;
     }
 
     function searchRhyme() {
@@ -616,6 +697,7 @@
       if (!input) return;
 
       const targetKey = getRhymeKey(input);
+      const allowApproxEnglish = document.getElementById('allow-approx-english').checked;
       if (!targetKey) {
         document.getElementById('rhyme-target-word').innerText = input;
         document.getElementById('rhyme-count-badge').innerText = '0 คำ';
@@ -627,7 +709,7 @@
       // ค้นจากคำท้ายของแต่ละประโยค/วลีที่เก็บไว้ และไม่แสดงรายการที่เป็นคำค้นเดียวกัน
       const exactMatches = words.filter(w => {
         if (normalizeThai(w.text) === normalizeThai(input)) return false;
-        return rhymeKeysMatch(getRhymeKey(w.text), targetKey);
+        return rhymeKeysMatch(getRhymeKey(w.text), targetKey, allowApproxEnglish);
       });
 
       document.getElementById('rhyme-target-word').innerText = input;
@@ -737,22 +819,29 @@
       };
     }
 
-    function saveExtractedWords() {
+    async function saveExtractedWords() {
       if (extractedWordsBuffer.length === 0) return;
 
+      const addedIds = [];
       extractedWordsBuffer.forEach(wordText => {
         const classification = classifyWord(wordText);
+        const id = Date.now().toString() + Math.random().toString(36).substr(2, 4);
         words.push({
-          id: Date.now().toString() + Math.random().toString(36).substr(2, 4),
+          id,
           text: wordText,
           syllables: estimateSyllables(wordText),
           pos: classification.pos,
           mood: classification.mood,
           note: extractedAsPhrases ? 'บันทึกเป็นวลีจากข้อความ' : 'สกัดจากข้อความ'
         });
+        addedIds.push(id);
       });
 
-      saveAndRefresh();
+      if (!await saveAndRefresh()) {
+        words = words.filter(w => !addedIds.includes(w.id));
+        renderVault();
+        return;
+      }
       document.getElementById('extract-input').value = '';
       document.getElementById('extract-results-container').classList.add('hidden');
       switchTab('vault');
@@ -797,7 +886,7 @@
       document.getElementById('word-modal').classList.remove('flex');
     }
 
-    function saveWordFromModal() {
+    async function saveWordFromModal() {
       const id = document.getElementById('modal-word-id').value;
       const text = document.getElementById('modal-text').value.trim();
       const syllables = document.getElementById('modal-syllables').value;
@@ -807,9 +896,12 @@
 
       if (!text) return;
 
+      let oldWord = null;
+      let addedId = '';
       if (id) {
         const word = words.find(w => w.id === id);
         if (word) {
+          oldWord = { ...word };
           word.text = text;
           word.syllables = syllables;
           word.pos = pos;
@@ -817,17 +909,27 @@
           word.note = note;
         }
       } else {
-        words.push({ id: Date.now().toString(), text, syllables, pos, mood, note });
+        addedId = Date.now().toString();
+        words.push({ id: addedId, text, syllables, pos, mood, note });
       }
 
-      saveAndRefresh();
+      if (!await saveAndRefresh()) {
+        if (oldWord) Object.assign(words.find(w => w.id === id), oldWord);
+        else words = words.filter(w => w.id !== addedId);
+        renderVault();
+        return;
+      }
       closeModal();
     }
 
-    function deleteWord(id) {
+    async function deleteWord(id) {
       if (confirm('ต้องการลบคำศัพท์นี้ออกจากคลังหรือไม่?')) {
+        const previousWords = words;
         words = words.filter(w => w.id !== id);
-        saveAndRefresh();
+        if (!await saveAndRefresh()) {
+          words = previousWords;
+          renderVault();
+        }
       }
     }
 
@@ -844,13 +946,17 @@
       if (!file) return;
 
       const reader = new FileReader();
-      reader.onload = (evt) => {
+      reader.onload = async (evt) => {
         try {
           const imported = JSON.parse(evt.target.result);
           if (Array.isArray(imported)) {
+            const previousWords = words;
             words = imported;
-            saveAndRefresh();
-            alert('นำเข้าข้อมูลสำเร็จ!');
+            if (await saveAndRefresh()) alert('นำเข้าข้อมูลสำเร็จ!');
+            else {
+              words = previousWords;
+              renderVault();
+            }
           }
         } catch (err) {
           alert('รูปแบบไฟล์ JSON ไม่ถูกต้อง');
