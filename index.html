@@ -393,7 +393,7 @@
     }
 
     // --- THAI SONGWRITER RHYME SEARCH ---
-    // จัดสัมผัสตามเสียงสระและเสียงตัวสะกดท้ายพยางค์ ไม่สนเสียงวรรณยุกต์
+    // จัดสัมผัสตามเสียงสระ ตัวสะกด และวรรณยุกต์ของพยางค์ท้าย
     function normalizeThai(text) {
       return (text || '').normalize('NFC').replace(/[ๆฯ.,!?;:()\[\]{}"“”‘’…—–\-]/g, ' ').trim();
     }
@@ -425,7 +425,8 @@
 
       let vowel = '';
       let codaOverride = '';
-      const preposed = mark ? /[เแโใไ]/.test(mark[0]) : false;
+      let preposed = mark ? /[เแโใไ]/.test(mark[0]) : false;
+      let onsetAnchorIndex = mark?.index ?? -1;
       const tail = mark ? word.slice(Math.max(0, mark.index - 4)) : word;
 
       if (implicitShortO) {
@@ -449,6 +450,16 @@
         vowel = 'UEA';
       } else if (mark[0] === 'ั' && /ว$/.test(word)) {
         vowel = 'UA'; codaOverride = 'OPEN';
+      } else if (mark[0] === 'อ' && /เ(?:[ก-ฮ][รลว]?|ห[งญณนมยรลว])ือ$/.test(word)) {
+        vowel = 'UEA'; codaOverride = 'OPEN'; preposed = true; onsetAnchorIndex = word.lastIndexOf('เ');
+      } else if (mark[0] === 'อ' && /ือ$/.test(word)) {
+        vowel = 'UE_LONG'; codaOverride = 'OPEN';
+      } else if (mark[0] === 'อ' && /แ(?:[ก-ฮ][รลว]?)?อ$/.test(word)) {
+        vowel = 'AE_LONG'; codaOverride = 'OPEN'; preposed = true; onsetAnchorIndex = word.lastIndexOf('แ');
+      } else if (mark[0] === 'อ' && /เ(?:[ก-ฮ][รลว]?)อ$/.test(word)) {
+        vowel = 'OE_LONG'; codaOverride = 'OPEN'; preposed = true; onsetAnchorIndex = word.lastIndexOf('เ');
+      } else if (mark[0] === 'อ') {
+        vowel = 'OR_LONG';
       } else if (mark[0] === 'โ') {
         vowel = 'O_LONG';
       } else if (mark[0] === 'แ') {
@@ -487,6 +498,22 @@
         else if (/[นณญรลฬ]/.test(last)) coda = 'N';
         else if (last === 'ม') coda = 'M';
         else if (last === 'ง') coda = 'NG';
+      } else if (preposed && !codaOverride) {
+        const afterVowel = word.slice(mark.index + 1).replace(/[่้๊๋็]/g, '');
+        const afterConsonants = [...afterVowel.matchAll(/[ก-ฮ]/g)];
+        const pair = afterConsonants.length > 1 ? afterConsonants[0][0] + afterConsonants[1][0] : '';
+        const validOnset = /^(?:[กขค][รลว]|[ปพ][รล]|ตร)$/.test(pair);
+        const onsetSize = validOnset ? 2 : 1;
+        if (afterConsonants.length > onsetSize + 1) return '';
+        const finalConsonant = afterConsonants.length > onsetSize ? afterConsonants[onsetSize][0] : '';
+        if (/[กขคฆ]/.test(finalConsonant)) coda = 'K';
+        else if (/[ดจชซฎฏฐฑฒตถทธศษส]/.test(finalConsonant)) coda = 'T';
+        else if (/[บปพฟภ]/.test(finalConsonant)) coda = 'P';
+        else if (/[นณญรลฬ]/.test(finalConsonant)) coda = 'N';
+        else if (finalConsonant === 'ม') coda = 'M';
+        else if (finalConsonant === 'ง') coda = 'NG';
+        else if (finalConsonant === 'ย') coda = 'Y';
+        else if (finalConsonant === 'ว') coda = 'W';
       } else if (!preposed && !codaOverride) {
         const afterVowel = word.slice(mark.index + 1).replace(/[่้๊๋็]/g, '');
         const endingConsonants = [...afterVowel.matchAll(/[ก-ฮ]/g)];
@@ -506,13 +533,17 @@
       // หาอักษรต้นพยางค์ท้าย รวม ห นำที่กำหนดชั้นวรรณยุกต์
       let onsetIndex;
       if (implicitShortO) onsetIndex = consonants[0].index;
-      else if (preposed) onsetIndex = consonants.find(m => m.index > mark.index)?.index;
+      else if (preposed) onsetIndex = consonants.find(m => m.index > onsetAnchorIndex)?.index;
       else onsetIndex = consonants.filter(m => m.index < mark.index).at(-1)?.index;
       if (onsetIndex === undefined) return '';
       let onsetChar = word[onsetIndex];
       if (onsetChar !== 'ห') {
         const prior = consonants.filter(m => m.index < onsetIndex).at(-1);
         if (prior?.[0] === 'ห' && /[งญณนมยรลว]/.test(onsetChar)) onsetChar = 'ห';
+        // อ นำ ย (อย่า, อยู่, อย่าง, อยาก) ใช้ชั้นอักษรกลางกำหนดเสียงวรรณยุกต์
+        if (prior?.[0] === 'อ' && onsetChar === 'ย' && onsetIndex - prior.index === 1) onsetChar = 'อ';
+        // สว ในคำอย่าง สว่าง มี ส เป็นอักษรนำกำหนดเสียงของ ว
+        if (prior?.[0] === 'ส' && onsetChar === 'ว' && onsetIndex - prior.index === 1) onsetChar = 'ส';
         const validClusters = { ก: 'รลว', ข: 'รลว', ค: 'รลว', ป: 'รล', พ: 'รล', ต: 'ร' };
         if (onsetChar !== 'ห' && prior && onsetIndex - prior.index === 1 && validClusters[prior[0]]?.includes(onsetChar)) onsetChar = prior[0];
       }
