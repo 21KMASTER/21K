@@ -571,8 +571,15 @@
 
     function rhymeKeysMatch(left, right) {
       if (!left || !right) return false;
-      const [leftVowel, leftCoda, leftTone] = left.split('_');
-      const [rightVowel, rightCoda, rightTone] = right.split('_');
+      // ชื่อสระบางชุดมีขีดล่าง เช่น AA_LONG; อ่านจากท้ายเพื่อไม่ให้แยกช่องผิด
+      const splitKey = key => {
+        const parts = key.split('_');
+        const tone = parts.pop();
+        const coda = parts.pop();
+        return [parts.join('_'), coda, tone];
+      };
+      const [leftVowel, leftCoda, leftTone] = splitKey(left);
+      const [rightVowel, rightCoda, rightTone] = splitKey(right);
       return leftVowel === rightVowel && leftCoda === rightCoda
         && (leftTone === rightTone || leftTone === 'ANY' || rightTone === 'ANY');
     }
