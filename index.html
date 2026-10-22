@@ -176,7 +176,7 @@
           <h2 class="text-lg font-bold text-white mb-1 flex items-center gap-2">
             <i class="fa-solid fa-wand-magic-sparkles text-joox-green"></i> สกัดข้อความ
           </h2>
-          <p class="text-xs text-joox-text mb-4">วางหรือพิมพ์ข้อความได้เลย ระบบจะแยกทุกช่วงที่คั่นด้วยช่องว่างเป็นคนละคำ คัดคำซ้ำ แล้วให้เลือกบันทึกลงคลัง</p>
+          <p class="text-xs text-joox-text mb-4">ระบบจะแยกคำตามช่องว่าง คัดคำซ้ำ และลองจัดประเภทกับอารมณ์จากชุดคำภาษาไทยในเครื่อง รายการที่ไม่แน่ใจจะเป็น “ทั่วไป / ไม่ระบุ” และแก้ไขภายหลังได้</p>
           
           <textarea id="extract-input" rows="7" placeholder="วางบทความ นิยาย หรือเนื้อเพลงที่นี่..." class="w-full bg-joox-sidebar border border-joox-border rounded-lg p-4 text-sm text-white focus:outline-none focus:border-joox-green mb-4 resize-y placeholder-joox-text/50"></textarea>
           
@@ -569,12 +569,16 @@
           tag.className = 'px-3 py-1.5 rounded-lg bg-joox-card text-xs text-white border border-joox-border flex items-center gap-2';
           const label = document.createElement('span');
           label.textContent = word;
+          const classification = classifyWord(word);
+          const typeMood = document.createElement('span');
+          typeMood.className = 'text-[10px] text-joox-green';
+          typeMood.textContent = `${classification.pos} · ${classification.mood || 'ไม่ระบุอารมณ์'}`;
           const remove = document.createElement('button');
           remove.type = 'button';
           remove.className = 'text-joox-text hover:text-red-400 cursor-pointer text-xs';
           remove.innerHTML = '<i class="fa-solid fa-xmark"></i>';
           remove.addEventListener('click', () => removeExtractedTag(word, remove));
-          tag.append(label, remove);
+          tag.append(label, typeMood, remove);
           tagsContainer.appendChild(tag);
         });
       }
@@ -588,16 +592,46 @@
       document.getElementById('extract-count').innerText = extractedWordsBuffer.length;
     }
 
+    // จัดประเภทแบบออฟไลน์ด้วยคลังคำบ่งชี้ในตัวแอป; คำที่ไม่ชัดเจนจะไม่ถูกเดา
+    function findLexiconCategory(text, lexicons) {
+      return lexicons.find(([, entries]) => entries.includes(text))?.[0]
+        || lexicons.find(([, entries]) => entries.some(entry => entry.length >= 3 && text.includes(entry)))?.[0]
+        || '';
+    }
+
+    function classifyWord(text) {
+      const moodLexicons = [
+        ['คิดถึง', ['คิดถึง', 'คะนึง', 'ห่วงหา', 'โหยหา', 'รอคอย', 'คนไกล']],
+        ['อกหัก', ['อกหัก', 'เลิกลา', 'จากลา', 'ลาจาก', 'นอกใจ', 'ทิ้งไป', 'เสียใจ']],
+        ['เหงา', ['เหงา', 'เดียวดาย', 'ลำพัง', 'เปลี่ยว', 'ว้าเหว่']],
+        ['สดใส', ['สดใส', 'ร่าเริง', 'สดชื่น', 'เบิกบาน', 'ยิ้มแย้ม']],
+        ['เศร้า', ['เศร้า', 'น้ำตา', 'ร้องไห้', 'ทุกข์', 'หม่นหมอง', 'เจ็บปวด']],
+        ['อบอุ่น', ['อบอุ่น', 'อ้อมกอด', 'กอด', 'ห่วงใย', 'ปลอดภัย', 'ครอบครัว']],
+        ['สนุก', ['สนุก', 'เต้น', 'หัวเราะ', 'เฮฮา', 'ครื้นเครง', 'มันส์']]
+      ];
+      const posLexicons = [
+        ['กริยา', ['รัก', 'คิดถึง', 'คะนึง', 'รอ', 'รอคอย', 'กอด', 'จูบ', 'ลืม', 'จำ', 'เดิน', 'กลับ', 'มอง', 'ฟัง', 'ฝัน', 'ร้องไห้', 'ยิ้ม', 'หัวเราะ', 'เต้น', 'จากลา', 'เลิกลา', 'ทิ้ง']],
+        ['คุณศัพท์', ['เหงา', 'เศร้า', 'สดใส', 'อบอุ่น', 'เจ็บ', 'เจ็บปวด', 'สวย', 'งาม', 'ดี', 'เลว', 'สุข', 'ทุกข์', 'หนาว', 'ร้อน', 'สดชื่น', 'เดียวดาย', 'ว้าเหว่']],
+        ['วิเศษณ์', ['มาก', 'น้อย', 'ช้า', 'เร็ว', 'ไกล', 'ใกล้', 'เสมอ', 'ยัง', 'เพียง', 'แค่', 'ที่สุด', 'เหลือเกิน']],
+        ['นาม', ['หัวใจ', 'ความรัก', 'ความฝัน', 'ดวงดาว', 'ขอบฟ้า', 'น้ำตา', 'สายลม', 'บ้าน', 'ครอบครัว', 'คนรัก', 'ความทรงจำ', 'ท้องฟ้า', 'ทะเล', 'คืน', 'วัน']]
+      ];
+      return {
+        pos: findLexiconCategory(text, posLexicons) || 'ทั่วไป',
+        mood: findLexiconCategory(text, moodLexicons)
+      };
+    }
+
     function saveExtractedWords() {
       if (extractedWordsBuffer.length === 0) return;
 
       extractedWordsBuffer.forEach(wordText => {
+        const classification = classifyWord(wordText);
         words.push({
           id: Date.now().toString() + Math.random().toString(36).substr(2, 4),
           text: wordText,
           syllables: estimateSyllables(wordText),
-          pos: 'ทั่วไป',
-          mood: '',
+          pos: classification.pos,
+          mood: classification.mood,
           note: 'สกัดจากข้อความ'
         });
       });
