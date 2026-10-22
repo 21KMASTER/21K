@@ -420,7 +420,8 @@
       if (mark && /[ใไ]/.test(mark[0])) {
         vowel = 'AI'; codaOverride = 'OPEN';
       } else if (/าย$/.test(word)) {
-        vowel = 'AI'; codaOverride = 'OPEN';
+        // -าย เป็นเสียงยาว (อาย) แยกจาก ใ-/ไ- ที่เป็นเสียงสั้น
+        vowel = 'AAY'; codaOverride = 'OPEN';
       } else if (/ำ$/.test(word)) {
         vowel = 'AM'; codaOverride = 'M';
       } else if (mark && mark[0] === 'ี' && new RegExp(`เ${onset}ี`).test(tail)) {
