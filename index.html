@@ -329,7 +329,8 @@
       'ขณะ', 'เละ', 'แหละ', 'หัวเราะ', 'แฮะ', 'เพี๊ยะ',
       'เงียบสงัด', 'บีบรัด', 'วัด', 'ไม่ถนัด', 'ชัด', 'นัด', 'คัด',
       'จัตุรัส', 'เฉพาะ', 'แคระ', 'ลักษณะ', 'เพราะ',
-      'กรรมซัด', 'สงัด', 'เสียสละ', 'รัช', 'สละ'
+      'กรรมซัด', 'สงัด', 'เสียสละ', 'รัช', 'สละ',
+      'รัฐ', 'ไม่เหมาะ', 'งัด', 'พลัด', 'ภัต', 'ผละ', 'ฟัด', 'ภัจ', 'ยัด', 'รัด'
     ];
     let visibleVaultLimit = PAGE_SIZE;
     let currentVaultResults = [];
@@ -545,18 +546,18 @@
 
       if (implicitShortO) {
         vowel = 'O_SHORT';
-      } else if (/เ[ก-ฮ][่้๊๋]?าะ$/.test(word)) {
+      } else if (/เ(?:[กขค][รลว]|[ปพ][รล]|ตร|[ก-ฮ])[่้๊๋]?าะ$/.test(word)) {
         // สระเอาะ เช่น เราะ/เพราะ ต้องแยกจากสระอะท้ายคำ
-        vowel = 'O_SHORT'; codaOverride = 'T'; preposed = true; onsetAnchorIndex = word.lastIndexOf('เ');
-      } else if (/แ[ก-ฮ][่้๊๋]?ะ$/.test(word)) {
+        vowel = 'O_SHORT'; codaOverride = 'GLOTTAL'; preposed = true; onsetAnchorIndex = word.lastIndexOf('เ');
+      } else if (/แ(?:ห[งญณนมยรลว]|[กขค][รลว]|[ปพ][รล]|ตร|[ก-ฮ])[่้๊๋]?ะ$/.test(word)) {
         // สระแอะ เช่น แฮะ/แหละ
-        vowel = 'AE_SHORT'; codaOverride = 'T'; preposed = true; onsetAnchorIndex = word.lastIndexOf('แ');
-      } else if (/เ[ก-ฮ][่้๊๋]?ะ$/.test(word)) {
+        vowel = 'AE_SHORT'; codaOverride = 'GLOTTAL'; preposed = true; onsetAnchorIndex = word.lastIndexOf('แ');
+      } else if (/เ(?:[กขค][รลว]|[ปพ][รล]|ตร|[ก-ฮ])[่้๊๋]?ะ$/.test(word)) {
         // สระเอะ เช่น เละ
-        vowel = 'E_SHORT'; codaOverride = 'T'; preposed = true; onsetAnchorIndex = word.lastIndexOf('เ');
+        vowel = 'E_SHORT'; codaOverride = 'GLOTTAL'; preposed = true; onsetAnchorIndex = word.lastIndexOf('เ');
       } else if (/เ[ก-ฮ][่้๊๋]?ี[่้๊๋]?ยะ$/.test(word)) {
         // สระเอียะ เช่น เพี๊ยะ: ย เป็นส่วนของรูปสระ ไม่ใช่ตัวสะกด
-        vowel = 'IA_SHORT'; codaOverride = 'T'; preposed = true; onsetAnchorIndex = word.lastIndexOf('เ');
+        vowel = 'IA_SHORT'; codaOverride = 'GLOTTAL'; preposed = true; onsetAnchorIndex = word.lastIndexOf('เ');
       } else if (/[ใไ]/.test(mark[0])) {
         vowel = 'AI_SHORT'; codaOverride = 'OPEN';
       } else if (/าย$/.test(word)) {
@@ -655,8 +656,8 @@
         else if (last === 'ว') coda = 'W';
       }
       if (codaOverride) coda = codaOverride;
-      // สระเสียงสั้นที่เขียนด้วย ะ ปิดท้ายคำลงท้ายด้วยเสียงกักช่องคอ ไม่ใช่สระเปิด
-      if (!codaOverride && word.endsWith('ะ')) coda = 'T';
+      // ะ ท้ายพยางค์เป็นเสียงกักช่องคอ แยกจากตัวสะกด ด/ต/ฐ ซึ่งเป็นเสียง /t/
+      if (!codaOverride && word.endsWith('ะ')) coda = 'GLOTTAL';
 
       // หาอักษรต้นพยางค์ท้าย รวม ห นำที่กำหนดชั้นวรรณยุกต์
       let onsetIndex;
