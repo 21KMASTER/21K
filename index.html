@@ -336,6 +336,7 @@
       'เชียร์', 'เบียร์', 'เคลียร์', 'เวียร', 'เพียร', 'เทียร', 'เจียร',
       'เวียน', 'เรียน', 'รถยนต์'
     ];
+    const NIA_EXCLUDED_RHYMES = ['ด้วย'];
     let visibleVaultLimit = PAGE_SIZE;
     let currentVaultResults = [];
     let vaultSearchTimer = null;
@@ -765,8 +766,11 @@
       const bEndsWithExcluded = PHRA_EXCLUDED_RHYMES.some(word => b.endsWith(word));
       const aEndsWithBianExcluded = BIAN_EXCLUDED_RHYMES.some(word => a.endsWith(word));
       const bEndsWithBianExcluded = BIAN_EXCLUDED_RHYMES.some(word => b.endsWith(word));
+      const aEndsWithNiaExcluded = NIA_EXCLUDED_RHYMES.some(word => a.endsWith(word));
+      const bEndsWithNiaExcluded = NIA_EXCLUDED_RHYMES.some(word => b.endsWith(word));
       return (a === 'พระ' && bEndsWithExcluded) || (b === 'พระ' && aEndsWithExcluded)
-        || (a === 'เบียน' && bEndsWithBianExcluded) || (b === 'เบียน' && aEndsWithBianExcluded);
+        || (a === 'เบียน' && bEndsWithBianExcluded) || (b === 'เบียน' && aEndsWithBianExcluded)
+        || (a === 'เนี่ย' && bEndsWithNiaExcluded) || (b === 'เนี่ย' && aEndsWithNiaExcluded);
     }
 
     function searchRhyme() {
