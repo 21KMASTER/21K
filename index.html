@@ -325,7 +325,11 @@
     let words = loadLocalWords() || defaultWords;
     let vaultDatabase = null;
     const PAGE_SIZE = 100;
-    const PHRA_EXCLUDED_RHYMES = ['ขณะ', 'เละ', 'แหละ', 'หัวเราะ', 'แฮะ', 'เพี๊ยะ'];
+    const PHRA_EXCLUDED_RHYMES = [
+      'ขณะ', 'เละ', 'แหละ', 'หัวเราะ', 'แฮะ', 'เพี๊ยะ',
+      'เงียบสงัด', 'บีบรัด', 'วัด', 'ไม่ถนัด', 'ชัด', 'นัด', 'คัด',
+      'จัตุรัส', 'เฉพาะ', 'แคระ', 'ลักษณะ', 'เพราะ'
+    ];
     let visibleVaultLimit = PAGE_SIZE;
     let currentVaultResults = [];
     let vaultSearchTimer = null;
@@ -743,7 +747,9 @@
       const input = document.getElementById('rhyme-input').value.trim();
       if (!input) return;
 
-      const targetKey = getRhymeKey(input);
+      // เทียบเสียงจากคำสุดท้ายเท่านั้น ตามวิธีค้นหาสัมผัสของผู้แต่งเพลง
+      const targetWord = lastWordOf(input);
+      const targetKey = getRhymeKey(targetWord);
       const allowApproxEnglish = document.getElementById('allow-approx-english').checked;
       if (!targetKey) {
         document.getElementById('rhyme-target-word').innerText = input;
@@ -755,9 +761,10 @@
 
       // ค้นจากคำท้ายของแต่ละประโยค/วลีที่เก็บไว้ และไม่แสดงรายการที่เป็นคำค้นเดียวกัน
       const exactMatches = words.filter(w => {
-        if (normalizeThai(w.text) === normalizeThai(input)) return false;
-        if (isUserExcludedRhymePair(input, w.text)) return false;
-        return rhymeKeysMatch(getRhymeKey(w.text), targetKey, allowApproxEnglish);
+        const finalWord = lastWordOf(w.text);
+        if (normalizeThai(finalWord) === normalizeThai(targetWord)) return false;
+        if (isUserExcludedRhymePair(targetWord, finalWord)) return false;
+        return rhymeKeysMatch(getRhymeKey(finalWord), targetKey, allowApproxEnglish);
       });
 
       document.getElementById('rhyme-target-word').innerText = input;
