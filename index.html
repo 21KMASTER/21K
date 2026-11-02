@@ -572,7 +572,23 @@
         vowel = 'O_SHORT';
       } else if (mark[0] === 'ี' && /เ[ก-ฮ][รลว]?ี/.test(tail)) {
         vowel = /ว$/.test(word) ? 'IAO' : 'IA';
+        preposed = true; onsetAnchorIndex = word.lastIndexOf('เ');
         if (vowel === 'IAO') codaOverride = 'OPEN';
+        else {
+          // ในสระเอีย ตัว ย เป็นส่วนของสระ; ตัวสะกดจริงอยู่ถัดจาก ย เช่น เบียน/เรียน/เงียบ
+          const afterYa = word.slice(word.lastIndexOf('ย') + 1).replace(/[่้๊๋็]/g, '');
+          if (!afterYa) codaOverride = 'OPEN';
+          else if (afterYa.length === 1) {
+            const final = afterYa[0];
+            if (/[กขคฆ]/.test(final)) codaOverride = 'K';
+            else if (/[ดจชซฎฏฐฑฒตถทธศษส]/.test(final)) codaOverride = 'T';
+            else if (/[บปพฟภ]/.test(final)) codaOverride = 'P';
+            else if (/[นณญรลฬ]/.test(final)) codaOverride = 'N';
+            else if (final === 'ม') codaOverride = 'M';
+            else if (final === 'ง') codaOverride = 'NG';
+            else return '';
+          } else return '';
+        }
       } else if (mark[0] === 'ื' && /เ[ก-ฮ][รลว]?ื/.test(tail)) {
         vowel = 'UEA';
       } else if (mark[0] === 'ั' && /ว$/.test(word)) {
