@@ -337,6 +337,10 @@
       'เวียน', 'เรียน', 'รถยนต์'
     ];
     const NIA_EXCLUDED_RHYMES = ['ด้วย'];
+    const THOT_EXCLUDED_RHYMES = [
+      'ปวด', 'หมด', 'รถ', 'ตำรวจ', 'ขวด', 'อังกฤษ', 'กวด', 'หนวด',
+      'สามารถ', 'มูรธ', 'ลด', 'พุทธ', 'ทั้งหมด', 'สมสร'
+    ];
     let visibleVaultLimit = PAGE_SIZE;
     let currentVaultResults = [];
     let vaultSearchTimer = null;
@@ -768,9 +772,12 @@
       const bEndsWithBianExcluded = BIAN_EXCLUDED_RHYMES.some(word => b.endsWith(word));
       const aEndsWithNiaExcluded = NIA_EXCLUDED_RHYMES.some(word => a.endsWith(word));
       const bEndsWithNiaExcluded = NIA_EXCLUDED_RHYMES.some(word => b.endsWith(word));
+      const aEndsWithThotExcluded = THOT_EXCLUDED_RHYMES.some(word => a.endsWith(word));
+      const bEndsWithThotExcluded = THOT_EXCLUDED_RHYMES.some(word => b.endsWith(word));
       return (a === 'พระ' && bEndsWithExcluded) || (b === 'พระ' && aEndsWithExcluded)
         || (a === 'เบียน' && bEndsWithBianExcluded) || (b === 'เบียน' && aEndsWithBianExcluded)
-        || (a === 'เนี่ย' && bEndsWithNiaExcluded) || (b === 'เนี่ย' && aEndsWithNiaExcluded);
+        || (a === 'เนี่ย' && bEndsWithNiaExcluded) || (b === 'เนี่ย' && aEndsWithNiaExcluded)
+        || (a === 'โทษ' && bEndsWithThotExcluded) || (b === 'โทษ' && aEndsWithThotExcluded);
     }
 
     function searchRhyme() {
