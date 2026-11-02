@@ -332,6 +332,10 @@
       'กรรมซัด', 'สงัด', 'เสียสละ', 'รัช', 'สละ',
       'รัฐ', 'ไม่เหมาะ', 'งัด', 'พลัด', 'ภัต', 'ผละ', 'ฟัด', 'ภัจ', 'ยัด', 'รัด'
     ];
+    const BIAN_EXCLUDED_RHYMES = [
+      'เชียร์', 'เบียร์', 'เคลียร์', 'เวียร', 'เพียร', 'เทียร', 'เจียร',
+      'เวียน', 'เรียน'
+    ];
     let visibleVaultLimit = PAGE_SIZE;
     let currentVaultResults = [];
     let vaultSearchTimer = null;
@@ -527,7 +531,8 @@
         if (/ee$/.test(englishWord)) return 'I_LONG_OPEN_ANY';
       }
       const silentFinalT = /ษฐ์$/.test(rawWord);
-      const word = rawWord.replace(/[^\u0E00-\u0E7F]/g, '').replace(/์/g, '');
+      // ตัดพยัญชนะที่มีการันต์ออกจากเสียงอ่าน เช่น ร์ ใน เชียร์/เบียร์/เคลียร์
+      const word = rawWord.replace(/[ก-ฮ]์/g, '').replace(/[^\u0E00-\u0E7F]/g, '').replace(/์/g, '');
       if (!word) return '';
 
       const marks = [...word.matchAll(/[ะัาำิีึืุูเแโใไอ]/g)];
@@ -758,7 +763,10 @@
       const b = normalizeThai(right).replace(/\s+/g, '');
       const aEndsWithExcluded = PHRA_EXCLUDED_RHYMES.some(word => a.endsWith(word));
       const bEndsWithExcluded = PHRA_EXCLUDED_RHYMES.some(word => b.endsWith(word));
-      return (a === 'พระ' && bEndsWithExcluded) || (b === 'พระ' && aEndsWithExcluded);
+      const aEndsWithBianExcluded = BIAN_EXCLUDED_RHYMES.some(word => a.endsWith(word));
+      const bEndsWithBianExcluded = BIAN_EXCLUDED_RHYMES.some(word => b.endsWith(word));
+      return (a === 'พระ' && bEndsWithExcluded) || (b === 'พระ' && aEndsWithExcluded)
+        || (a === 'เบียน' && bEndsWithBianExcluded) || (b === 'เบียน' && aEndsWithBianExcluded);
     }
 
     function searchRhyme() {
