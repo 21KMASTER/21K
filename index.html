@@ -325,6 +325,7 @@
     let words = loadLocalWords() || defaultWords;
     let vaultDatabase = null;
     const PAGE_SIZE = 100;
+    const PHRA_EXCLUDED_RHYMES = ['ขณะ', 'เละ', 'แหละ', 'หัวเราะ', 'แฮะ', 'เพี๊ยะ'];
     let visibleVaultLimit = PAGE_SIZE;
     let currentVaultResults = [];
     let vaultSearchTimer = null;
@@ -539,6 +540,18 @@
 
       if (implicitShortO) {
         vowel = 'O_SHORT';
+      } else if (/เ[ก-ฮ][่้๊๋]?าะ$/.test(word)) {
+        // สระเอาะ เช่น เราะ/เพราะ ต้องแยกจากสระอะท้ายคำ
+        vowel = 'O_SHORT'; codaOverride = 'T'; preposed = true; onsetAnchorIndex = word.lastIndexOf('เ');
+      } else if (/แ[ก-ฮ][่้๊๋]?ะ$/.test(word)) {
+        // สระแอะ เช่น แฮะ/แหละ
+        vowel = 'AE_SHORT'; codaOverride = 'T'; preposed = true; onsetAnchorIndex = word.lastIndexOf('แ');
+      } else if (/เ[ก-ฮ][่้๊๋]?ะ$/.test(word)) {
+        // สระเอะ เช่น เละ
+        vowel = 'E_SHORT'; codaOverride = 'T'; preposed = true; onsetAnchorIndex = word.lastIndexOf('เ');
+      } else if (/เ[ก-ฮ][่้๊๋]?ี[่้๊๋]?ยะ$/.test(word)) {
+        // สระเอียะ เช่น เพี๊ยะ: ย เป็นส่วนของรูปสระ ไม่ใช่ตัวสะกด
+        vowel = 'IA_SHORT'; codaOverride = 'T'; preposed = true; onsetAnchorIndex = word.lastIndexOf('เ');
       } else if (/[ใไ]/.test(mark[0])) {
         vowel = 'AI_SHORT'; codaOverride = 'OPEN';
       } else if (/าย$/.test(word)) {
@@ -637,6 +650,8 @@
         else if (last === 'ว') coda = 'W';
       }
       if (codaOverride) coda = codaOverride;
+      // สระเสียงสั้นที่เขียนด้วย ะ ปิดท้ายคำลงท้ายด้วยเสียงกักช่องคอ ไม่ใช่สระเปิด
+      if (!codaOverride && word.endsWith('ะ')) coda = 'T';
 
       // หาอักษรต้นพยางค์ท้าย รวม ห นำที่กำหนดชั้นวรรณยุกต์
       let onsetIndex;
@@ -716,6 +731,14 @@
       return leftTone === rightTone;
     }
 
+    function isUserExcludedRhymePair(left, right) {
+      const a = normalizeThai(left).replace(/\s+/g, '');
+      const b = normalizeThai(right).replace(/\s+/g, '');
+      const aEndsWithExcluded = PHRA_EXCLUDED_RHYMES.some(word => a.endsWith(word));
+      const bEndsWithExcluded = PHRA_EXCLUDED_RHYMES.some(word => b.endsWith(word));
+      return (a === 'พระ' && bEndsWithExcluded) || (b === 'พระ' && aEndsWithExcluded);
+    }
+
     function searchRhyme() {
       const input = document.getElementById('rhyme-input').value.trim();
       if (!input) return;
@@ -733,6 +756,7 @@
       // ค้นจากคำท้ายของแต่ละประโยค/วลีที่เก็บไว้ และไม่แสดงรายการที่เป็นคำค้นเดียวกัน
       const exactMatches = words.filter(w => {
         if (normalizeThai(w.text) === normalizeThai(input)) return false;
+        if (isUserExcludedRhymePair(input, w.text)) return false;
         return rhymeKeysMatch(getRhymeKey(w.text), targetKey, allowApproxEnglish);
       });
 
