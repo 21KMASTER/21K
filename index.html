@@ -341,6 +341,10 @@
       'ปวด', 'หมด', 'รถ', 'ตำรวจ', 'ขวด', 'อังกฤษ', 'กวด', 'หนวด',
       'สามารถ', 'มูรธ', 'ลด', 'พุทธ', 'ทั้งหมด', 'สมสร', 'โพสต์', 'โยชน์'
     ];
+    const RUAY_EXCLUDED_RHYMES = [
+      'ด้วย', 'สลวย', 'ป่วย', 'ช่วย', 'ม้วย', 'เหนียว', 'เหลว', 'ห้วย',
+      'เสวย', 'ดินเหนียว', 'เหยี่ยว', 'สวย'
+    ];
     let visibleVaultLimit = PAGE_SIZE;
     let currentVaultResults = [];
     let vaultSearchTimer = null;
@@ -543,10 +547,12 @@
       const marks = [...word.matchAll(/[ะัาำิีึืุูเแโใไอ]/g)];
       const mark = marks.length ? marks[marks.length - 1] : null;
       const consonants = [...word.matchAll(/[ก-ฮ]/g)];
+      // รวย/มวย/ซวย ใช้รูป อวย โดย ว และ ย เป็นส่วนของเสียงสระ ไม่ใช่ตัวสะกด
+      const implicitUay = consonants.length >= 2 && /[ก-ฮ][่้๊๋]?วย$/.test(word);
       // พยางค์ปิดที่ไม่มีรูปสระ เช่น ตน/คน/จน/บน/ลน/อน/พล ใช้สระโอะเสียงสั้น
       const implicitShortO = consonants.length === 2
         && (!mark || (word[0] === 'อ' && mark.index === 0));
-      if (!mark && !implicitShortO) return ''; // ไม่มีรูปสระท้ายที่ระบุได้ชัด ไม่เดา
+      if (!mark && !implicitShortO && !implicitUay) return ''; // ไม่มีรูปสระท้ายที่ระบุได้ชัด ไม่เดา
 
       let vowel = '';
       let codaOverride = '';
@@ -556,6 +562,8 @@
 
       if (implicitShortO) {
         vowel = 'O_SHORT';
+      } else if (implicitUay) {
+        vowel = 'UAY'; codaOverride = 'OPEN';
       } else if (/เ(?:[กขค][รลว]|[ปพ][รล]|ตร|[ก-ฮ])[่้๊๋]?าะ$/.test(word)) {
         // สระเอาะ เช่น เราะ/เพราะ ต้องแยกจากสระอะท้ายคำ
         vowel = 'O_SHORT'; codaOverride = 'GLOTTAL'; preposed = true; onsetAnchorIndex = word.lastIndexOf('เ');
@@ -688,6 +696,7 @@
       // หาอักษรต้นพยางค์ท้าย รวม ห นำที่กำหนดชั้นวรรณยุกต์
       let onsetIndex;
       if (implicitShortO) onsetIndex = consonants[0].index;
+      else if (implicitUay) onsetIndex = consonants.filter(m => m.index < word.lastIndexOf('ว')).at(-1)?.index;
       else if (preposed) onsetIndex = consonants.find(m => m.index > onsetAnchorIndex)?.index;
       else onsetIndex = consonants.filter(m => m.index < mark.index).at(-1)?.index;
       if (onsetIndex === undefined) return '';
@@ -774,10 +783,13 @@
       const bEndsWithNiaExcluded = NIA_EXCLUDED_RHYMES.some(word => b.endsWith(word));
       const aEndsWithThotExcluded = THOT_EXCLUDED_RHYMES.some(word => a.endsWith(word));
       const bEndsWithThotExcluded = THOT_EXCLUDED_RHYMES.some(word => b.endsWith(word));
+      const aEndsWithRuayExcluded = RUAY_EXCLUDED_RHYMES.some(word => a.endsWith(word));
+      const bEndsWithRuayExcluded = RUAY_EXCLUDED_RHYMES.some(word => b.endsWith(word));
       return (a === 'พระ' && bEndsWithExcluded) || (b === 'พระ' && aEndsWithExcluded)
         || (a === 'เบียน' && bEndsWithBianExcluded) || (b === 'เบียน' && aEndsWithBianExcluded)
         || (a === 'เนี่ย' && bEndsWithNiaExcluded) || (b === 'เนี่ย' && aEndsWithNiaExcluded)
-        || (a === 'โทษ' && bEndsWithThotExcluded) || (b === 'โทษ' && aEndsWithThotExcluded);
+        || (a === 'โทษ' && bEndsWithThotExcluded) || (b === 'โทษ' && aEndsWithThotExcluded)
+        || (a === 'รวย' && bEndsWithRuayExcluded) || (b === 'รวย' && aEndsWithRuayExcluded);
     }
 
     function searchRhyme() {
