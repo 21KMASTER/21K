@@ -345,6 +345,7 @@
       'ด้วย', 'สลวย', 'ป่วย', 'ช่วย', 'ม้วย', 'เหนียว', 'เหลว', 'ห้วย',
       'เสวย', 'ดินเหนียว', 'เหยี่ยว', 'สวย'
     ];
+    const FAAK_EXCLUDED_RHYMES = ['ก็'];
     let visibleVaultLimit = PAGE_SIZE;
     let currentVaultResults = [];
     let vaultSearchTimer = null;
@@ -785,11 +786,14 @@
       const bEndsWithThotExcluded = THOT_EXCLUDED_RHYMES.some(word => b.endsWith(word));
       const aEndsWithRuayExcluded = RUAY_EXCLUDED_RHYMES.some(word => a.endsWith(word));
       const bEndsWithRuayExcluded = RUAY_EXCLUDED_RHYMES.some(word => b.endsWith(word));
+      const aEndsWithFaakExcluded = FAAK_EXCLUDED_RHYMES.some(word => a.endsWith(word));
+      const bEndsWithFaakExcluded = FAAK_EXCLUDED_RHYMES.some(word => b.endsWith(word));
       return (a === 'พระ' && bEndsWithExcluded) || (b === 'พระ' && aEndsWithExcluded)
         || (a === 'เบียน' && bEndsWithBianExcluded) || (b === 'เบียน' && aEndsWithBianExcluded)
         || (a === 'เนี่ย' && bEndsWithNiaExcluded) || (b === 'เนี่ย' && aEndsWithNiaExcluded)
         || (a === 'โทษ' && bEndsWithThotExcluded) || (b === 'โทษ' && aEndsWithThotExcluded)
-        || (a === 'รวย' && bEndsWithRuayExcluded) || (b === 'รวย' && aEndsWithRuayExcluded);
+        || (a === 'รวย' && bEndsWithRuayExcluded) || (b === 'รวย' && aEndsWithRuayExcluded)
+        || (a === 'ฝาก' && bEndsWithFaakExcluded) || (b === 'ฝาก' && aEndsWithFaakExcluded);
     }
 
     function searchRhyme() {
